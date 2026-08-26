@@ -9,6 +9,7 @@ Mining Cadastre Viewer — an enterprise-grade Web GIS application for visualizi
 - **Zustand** for client state (selection, layer visibility/opacity, active tool, theme, coordinate format).
 - **OpenLayers** + **ol-ext** for the map engine; **proj4** for CRS conversions (WGS84 / Web Mercator / UTM); **Turf.js** for client-side geometry previews (measure, buffer) and for the offline data provider's spatial queries.
 - **Supabase**: Postgres + **PostGIS** for storage and spatial queries, called via PL/pgSQL RPC functions wrapped by Next.js Route Handlers — see "Data provider" below for the offline fallback.
+- **Sentry** (`@sentry/nextjs`) for error monitoring — `instrumentation.ts` (server/edge) + `instrumentation-client.ts` (browser) + `app/global-error.tsx`. No-ops entirely without `NEXT_PUBLIC_SENTRY_DSN` set, so it's inert in local dev.
 
 ## Architecture
 ```
@@ -83,7 +84,8 @@ This means `npm run dev` works immediately with **zero external setup** — no S
 - `SUPABASE_SERVICE_ROLE_KEY` (server-only, used by seed script — never set this in Vercel/any deployed runtime env)
 - `NEXT_PUBLIC_GOOGLE_MAPS_KEY` (optional — enables Google basemaps when set)
 - `NEXT_PUBLIC_MAPBOX_TOKEN` (optional locally, recommended in production — enables Mapbox basemaps and becomes the default basemap when set)
-- `NEXT_PUBLIC_SENTRY_DSN` (optional — enables Sentry error monitoring when set)
+- `NEXT_PUBLIC_SENTRY_DSN` (optional — enables Sentry error monitoring when set; the SDK no-ops without it)
+- `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (optional, build-time only — enables Sentry source-map upload; build succeeds without them, just skips the upload)
 
 ## Commands
 - `npm run dev` — start dev server
