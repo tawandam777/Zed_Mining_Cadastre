@@ -374,8 +374,8 @@ export default function MapCanvas() {
           {measureHud.text}
         </div>
       )}
-      <div ref={scaleBarRef} className="absolute bottom-8 left-3 z-10" />
-      <div ref={overviewRef} className="ol-overview-slot absolute right-3 bottom-3 z-10" />
+      <div ref={scaleBarRef} className="absolute bottom-16 left-3 z-10 sm:bottom-8" />
+      <div ref={overviewRef} className="ol-overview-slot absolute right-3 bottom-16 z-10 sm:bottom-3" />
       <div ref={compassRef} className="absolute top-3 right-3 z-10" />
     </div>
   );

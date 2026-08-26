@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 /** Compact status legend shown over the map when the left sidebar is collapsed, so the color key is never fully lost. */
 export function FloatingLegend() {
   const leftOpen = useMapStore((s) => s.leftOpen);
+  const activeTool = useMapStore((s) => s.activeTool);
   const toggleLeftPanel = useMapStore((s) => s.toggleLeftPanel);
   const statusVisibility = useMapStore((s) => s.statusVisibility);
   const toggleStatusVisibility = useMapStore((s) => s.toggleStatusVisibility);
@@ -15,8 +16,19 @@ export function FloatingLegend() {
   if (leftOpen) return null;
 
   return (
-    <div className="border-border bg-popover animate-in fade-in slide-in-from-left-2 absolute bottom-16 left-3 z-10 w-40 rounded-md border p-2.5 shadow-md duration-200">
-      <div className="mb-1.5 flex items-center justify-between">
+    <div
+      className={cn(
+        "border-border bg-popover animate-in fade-in slide-in-from-left-2 absolute top-84 left-3 z-10 w-32 rounded-md border p-2 shadow-md duration-200 sm:top-auto sm:bottom-16 sm:w-40 sm:p-2.5",
+        // An active tool grows the toolbar by one button (the "clear" button), which on
+        // mobile leaves no room between it and the bottom controls (scale bar/switcher) for
+        // the legend too — there just isn't enough vertical space on a phone screen for all
+        // of it at once. ToolStatusPanel is the relevant UI while a tool is active anyway, so
+        // hide the legend on mobile only for that state rather than fight for a few more
+        // pixels; it reappears the instant the tool is cleared.
+        activeTool && "max-sm:hidden",
+      )}
+    >
+      <div className="mb-1 flex items-center justify-between sm:mb-1.5">
         <span className="text-muted-foreground text-[10px] font-semibold tracking-wide uppercase">Legend</span>
         <button
           type="button"
@@ -28,7 +40,7 @@ export function FloatingLegend() {
           <Menu className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-0.5 sm:gap-1">
         {STATUS_LIST.map((status) => (
           <button
             key={status}
@@ -42,7 +54,7 @@ export function FloatingLegend() {
             />
             <span
               className={cn(
-                "text-[11px]",
+                "text-[10.5px] sm:text-[11px]",
                 statusVisibility[status]
                   ? "text-slate-700 dark:text-slate-200"
                   : "text-muted-foreground line-through",

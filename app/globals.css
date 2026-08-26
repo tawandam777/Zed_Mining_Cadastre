@@ -169,6 +169,16 @@
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
+/* OL's default is a fixed 150x150px (ol/ol.css) with no responsive handling of its own —
+   too large for the map's own bottom-right corner once it's the full viewport width on
+   mobile. Shrunk (same 1:1 ratio) and moved up, mobile-only — see the ref div's bottom-16
+   sm:bottom-3 classes in MapCanvas.tsx for the matching position change. */
+@media (max-width: 767px) {
+  .ol-overview-slot .ol-overviewmap-map {
+    width: 96px;
+    height: 96px;
+  }
+}
 .ol-overview-slot button {
   display: none;
 }
