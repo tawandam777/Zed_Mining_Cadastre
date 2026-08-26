@@ -9,12 +9,13 @@ export interface BasemapDefinition {
   attributions?: string;
   maxZoom?: number;
   /** Only render this basemap if this env var resolves to a truthy value. */
-  requiresEnv?: "NEXT_PUBLIC_GOOGLE_MAPS_KEY";
+  requiresEnv?: "NEXT_PUBLIC_GOOGLE_MAPS_KEY" | "NEXT_PUBLIC_MAPBOX_TOKEN";
   /** Swatch color shown in the layer tree before the tile loads. */
   swatch: string;
 }
 
 const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 export const BASEMAPS: BasemapDefinition[] = [
   {
@@ -45,6 +46,26 @@ export const BASEMAPS: BasemapDefinition[] = [
     swatch: "#CDD6C4",
   },
   {
+    id: "mapbox-streets",
+    label: "Mapbox Streets",
+    kind: "xyz",
+    url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN ?? ""}`,
+    attributions: "© Mapbox © OpenStreetMap",
+    maxZoom: 22,
+    requiresEnv: "NEXT_PUBLIC_MAPBOX_TOKEN",
+    swatch: "#E7ECE0",
+  },
+  {
+    id: "mapbox-satellite",
+    label: "Mapbox Satellite",
+    kind: "xyz",
+    url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN ?? ""}`,
+    attributions: "© Mapbox © OpenStreetMap © Maxar",
+    maxZoom: 22,
+    requiresEnv: "NEXT_PUBLIC_MAPBOX_TOKEN",
+    swatch: "#16201B",
+  },
+  {
     id: "google-roadmap",
     label: "Google Streets",
     kind: "xyz",
@@ -70,5 +91,10 @@ export function availableBasemaps(): BasemapDefinition[] {
   return BASEMAPS.filter((b) => !b.requiresEnv || Boolean(process.env[b.requiresEnv]));
 }
 
-/** Single source of truth for which basemap loads on first paint. */
-export const DEFAULT_BASEMAP_ID = "osm";
+/**
+ * Single source of truth for which basemap loads on first paint. Prefers Mapbox once a
+ * token is configured — OpenStreetMap's raw tile server (tile.openstreetmap.org) is meant
+ * for light/dev use only; its usage policy explicitly disallows production/bulk traffic and
+ * will throttle or block it. Falls back to OSM so local dev keeps working without a token.
+ */
+export const DEFAULT_BASEMAP_ID = MAPBOX_TOKEN ? "mapbox-streets" : "osm";
