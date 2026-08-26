@@ -1,0 +1,174 @@
+# To-Do
+
+Status key: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked
+
+## Infra / Scaffolding
+- [x] Scaffold Next.js app (TS strict, Tailwind v4, App Router) — installed as Next.js 16.2.10 (create-next-app@latest), React 19.2.4
+- [x] shadcn/ui init + base components (button, dialog, input, slider, tabs, popover, table, tooltip, checkbox, select, badge, separator, scroll-area, sheet, dropdown-menu, switch, label)
+- [x] ESLint + Prettier config
+- [x] Install OpenLayers, ol-ext, proj4, @turf/turf, zustand, @supabase/supabase-js, papaparse, shapefile, playwright (dev)
+- [x] `.env.local.example` with var names only
+- [!] Git init + first commit + GitHub remote — **blocked: Git is not installed on this machine.** Install Git for Windows (or `winget install Git.Git`), then run `git init`, commit, create a GitHub repo, and push.
+- [!] Vercel project linked, env vars set, first deploy — blocked on the above; once pushed to GitHub, import the repo at vercel.com/new and set the env vars from `.env.local.example`. **Also see the Turbopack file-tracing note below before deploying.**
+
+## Database / Seed
+- [x] `supabase/migrations/0001_init.sql` — postgis ext, `licences`, `boundaries` (national/province/district) tables, GiST + btree indexes, RLS
+- [x] RPC functions: `licences_geojson`, `licence_detail`, `licence_at_point`, `nearest_licence`, `licences_within_distance`, `licences_in_bbox`, `licences_in_buffer`, `boundaries_geojson`
+- [x] RLS read-only policy for anon
+- [x] `supabase/seed/seed.ts` — seeds real shapefile boundaries (national/10 provinces/116 districts) + the generated licence geometries (`lib/data/licences.generated.json`) via service-role client
+- [!] **Not yet run against a live project** — needs a real Supabase project. Steps: create project at supabase.com → copy URL/anon key/service role key into `.env.local` → run the SQL in `supabase/migrations/0001_init.sql` via the Supabase SQL editor (no CLI available on this machine) → `npm run seed`.
+
+## Offline Data Provider (2026-07-04)
+- [x] `lib/data/types.ts` — `DataProvider` interface shared by both backends
+- [x] `lib/data/localProvider.ts` — fully offline, in-memory provider; answers all spatial queries with Turf.js
+- [x] `lib/data/supabaseProvider.ts` — same interface, backed by the real PostGIS RPCs
+- [x] `lib/data/index.ts` — `getProvider()` picks Supabase when `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` are set, else falls back to local
+- [x] All API routes rewired to call `getProvider()` instead of Supabase directly
+- [x] `npm run dev` works with **zero external setup** — no Supabase project, Docker, or Git required
+
+## Real Admin Boundaries + Regenerated Licence Geometry (2026-07-05)
+- [x] `lib/data/shapefileLoader.ts` — reads `.shp`/`.dbf` pairs as buffers (see Issues log — string paths broke under Turbopack) into GeoJSON via the `shapefile` package
+- [x] `lib/data/adminBoundaries.ts` — loads `Admin_Bounds/{Zambia Boundary,Zambia Provinces,Zambia Districts}`, tags features `kind: national|province|district`, exposes `findProvinceForPoint()` for point-in-polygon province lookup
+- [x] `lib/data/types.ts` — `getBoundariesGeoJSON()` now returns `{ national, provinces, districts }` (was a single flat FeatureCollection); `supabaseProvider` splits its single tagged RPC result into the same shape for interface parity
+- [x] `supabase/migrations/0001_init.sql` — `boundaries.kind` check constraint updated to `national|province|district` (was `national|province_line`), added `parent_name` column for district→province linkage
+- [x] Old hand-drawn `ZAMBIA_OUTLINE`/`PROVINCE_LINES` constants deleted from `lib/data/referenceGeometry.ts` entirely (that file now only loads licence *attributes* from `ref/project/cadastre-data.js`, used solely by the generator script)
+- [x] `scripts/generate-licences.ts` — discards the old cadastre-data.js geometry, keeps every attribute (owner/commodity/status/type/area/dates/number), and generates brand-new non-overlapping, adjacently-tiled rectangular parcels via shelf/skyline bin-packing, sized from each licence's real area, concentrated in North-Western (21) and Copperbelt (20) with the remaining 15 scattered thinly across the other 8 provinces. Output: `lib/data/licences.generated.json` (committed, treat as generated — re-run the script, don't hand-edit).
+- [x] Verified programmatically: zero real overlaps (checked via actual intersection area, not `turf.booleanOverlap` — see Issues log), 100% of parcels fully within the real Zambia national boundary, `province` property recomputed from real point-in-polygon lookup (not inherited from old mock data)
+- [x] Verified visually: zoomed screenshot confirms parcels tile edge-to-edge with no visible gaps or overlaps
+
+## Config / Lib layer
+- [x] `config/basemaps.ts` (OSM default, ESRI imagery/topo, XYZ, Google gated by `NEXT_PUBLIC_GOOGLE_MAPS_KEY`)
+- [x] `config/app.config.ts`
+- [x] `lib/theme.ts` (STATUS_COLORS + palette tokens)
+- [x] `lib/crs.ts` (proj4 4326/3857/UTM, formatters)
+- [x] `lib/coord-parse.ts` (decimal/DMS/UTM parsing)
+- [x] `lib/geo.ts` (turf helpers)
+- [x] `lib/scale.ts` (resolution -> 1:N scale)
+- [x] `lib/useLicences.ts` (shared cached fetch of the full licence GeoJSON)
+- [x] `store/useMapStore.ts` (Zustand) — boundary state split into national/province/district pairs; `LeftTab` no longer includes `"tools"`
+
+## Map Core
+- [x] MapCanvas (OpenLayers, client-only, `next/dynamic` ssr:false)
+- [x] Basemap layer + **floating** switcher (bottom-center of map canvas, per the reference design — not in the sidebar)
+- [x] Pan/zoom/rotate (via Rotate control)/fullscreen (native Fullscreen API)/home extent
+- [x] Scale bar, compass ("N" reset-rotation control), zoom buttons, overview map
+- [x] Live coordinate readout + scale/projection display in status bar
+- [x] Three independent boundary layers (national/province/district), each with its own OL VectorLayer + style + opacity/visibility, fed by one shared `/api/boundaries` fetch
+
+## Licence Layer
+- [x] Licence vector layer from GeoJSON API (now serving the regenerated geometry)
+- [x] Status-based styling (fill/stroke from STATUS_COLORS), hidden when status toggled off
+- [x] Hover highlight matching the reference design exactly: outline darkens to navy `#0F2A43` on hover (not just a width change — this was a bug, see Issues log), select/tool-select/flash get a thicker outline than plain hover
+- [x] Click select + outline, labels, cursor tooltip (licence number/owner/status)
+- [x] Feature popup / right-panel detail (all required fields + geometry stats via `licence_detail` RPC/local equivalent)
+- [x] Opacity control, visibility toggle, zoom-to-feature, flash animation
+
+## API Routes
+- [x] GET /api/licences (GeoJSON, optional bbox)
+- [x] GET /api/licences/[id]
+- [x] GET /api/boundaries (now `{ national, provinces, districts }`)
+- [x] POST /api/query/point (ST_Contains)
+- [x] POST /api/query/bbox
+- [x] POST /api/query/nearest
+- [x] POST /api/query/within
+- [x] POST /api/query/buffer
+
+## Search
+- [x] Coordinate search (decimal/DMS/UTM parse -> zoom + marker + point query) — top bar search box
+- [x] Text search (licence #/owner/commodity/province) with result cards — top bar + Search tab with commodity/status/province filters
+
+## Spatial Tools — toolbar-only (2026-07-05: sidebar Tools tab removed)
+- [x] `components/tools/ToolsPanel.tsx` (sidebar version) **deleted**. All tool activation lives on `ToolRail` (floating, top-left of map); all tool instructions/buffer-radius/live-measurement text now live in `components/tools/ToolStatusPanel.tsx` (floating, anchored next to the rail, appears only when a tool is active)
+- [x] **Cursor-following live measurement HUD** (2026-07-05): a small tooltip tracks the mouse during an active drag-based tool, showing a continuously-updating value (not just the final result) — `components/tools/liveMeasurement.ts` computes the text, `MapCanvas`'s `pointermove` handler updates it every frame. Distinct from the fixed `ToolStatusPanel` (which still shows the final result once frozen) and from the plain licence-hover tooltip (suppressed while a tool is active). Applies to: measure distance (running length to cursor), measure area / select-by-polygon (running polygon area), select-by-rectangle (live area), select-by-circle (live radius). Deliberately not shown for buffer (radius is slider-driven, not cursor-driven) or identify (not a measurement). Visibility is derived from `activeTool && !toolFrozen` at render time rather than reset via an effect (same `set-state-in-effect` lint pattern as the earlier `RightPanel`/`ToolsPanel` fixes) — see Issues log.
+- [x] **Tool interaction lag fixed** (2026-07-05): `pointermove` handling (mouse-position store update, tool-overlay geometry rebuild, live-measurement turf math, HUD state) is now throttled to at most once per animation frame via `requestAnimationFrame`, instead of running on every raw `pointermove` event (which can fire 100-200+/sec on high-poll-rate mice/trackpads — far faster than any of that work needs to happen, and fast enough to back up the main thread and make clicks feel delayed). See Issues log for the root-cause details.
+- [x] Measure distance / area (turf preview + live readout)
+- [x] Identify feature
+- [x] Buffer (km slider -> PostGIS `licences_in_buffer` / local equivalent)
+- [x] Select by rectangle (-> bbox query) / circle (-> within-distance query) / polygon (client-side turf against loaded dataset)
+- [x] Nearest licence (RPC/local equivalent built; not yet wired to a dedicated UI button — reachable via API)
+- [x] Bounding-box query (shared with rectangle select)
+- [x] Clear selection / reset view (tool rail "X" + Home control)
+
+## Layer Manager
+- [x] Layer tree (Layers tab): three independent Administrative rows (Zambia Boundary, Province Boundaries, District Boundaries — each with visibility + opacity), Mining Licences opacity + per-status toggle/counts/legend
+- [x] Basemap swatches **removed** from the sidebar — see the floating `BasemapSwitcher` under Map Core
+
+## Attribute Table
+- [x] Sort/filter/search/paginate
+- [x] Highlight + zoom to row (row click)
+- [x] Export CSV
+- [x] Export GeoJSON
+
+## Shell / Theming
+- [x] TopBar, StatusBar, LeftPanel (**Layers/Search only**, Tools tab removed), RightPanel
+- [x] Floating tool rail + tool-status panel + zoom/home control + basemap switcher
+- [x] Light + dark mode (Zustand-driven `.dark` class on `<html>`). Dark mode now matches the request precisely: top bar and status bar switch from light-mode navy to the **same dark shade as the sidebar** (`dark:bg-card` alongside the light-mode `bg-brand-navy`), and every literal (non-semantic-token) text color across the sidebar/panels/tool-rail/tab-labels has a `dark:text-*` companion so nothing goes dark-on-dark illegible. Audited via computed-style inspection, not just visual screenshots (see Issues log for why).
+- [x] LeftPanel (the collapsible sidebar) background in **light mode** is now light grey (`bg-slate-100`), distinct from the white map/app background — dark mode unaffected (`dark:bg-card` still applies).
+
+## Map Controls (2026-07-05)
+- [x] `HOME_EXTENT_LONLAT` (`config/app.config.ts`) updated to Zambia's **real** national-boundary bounding box (computed from the shapefile, not an approximate hand-picked rectangle) — used by both the initial view center and the Home button.
+- [x] **Home button fixed** — it was a complete no-op (verified: view center genuinely never changed on click). Root cause + fix in the Issues log below.
+
+## Layer Settings Persistence (2026-07-05)
+- [x] All layer defaults changed to **fully on**: `DEFAULT_STATUS_VISIBILITY` (`lib/theme.ts`) now has every status — including Expired and Cancelled — `true`; `showDistrictBoundaries` now defaults `true`; `districtBoundaryOpacity` and `licenceOpacity` now default to `1` (full opacity, were `0.7`/`0.82`).
+- [x] `store/useMapStore.ts` wrapped with Zustand's `persist` middleware (localStorage, key `mining-cadastre-layer-settings`), `partialize`d to **only** basemap + boundary visibility/opacity (national/province/district) + licence opacity + status visibility. Everything else (selection, active tool, search filters, mouse/view info) intentionally does not persist — a refresh always starts those fresh.
+- [x] `skipHydration: true` on the persist config + a manual `useMapStore.persist.rehydrate()` call in `AppShell`'s mount effect — avoids a Next.js SSR/client hydration mismatch (localStorage isn't available during server rendering).
+- [x] Map view is **not** persisted anywhere (view/zoom/pan state was never stored) — so a page refresh always recenters on the whole of Zambia via the fresh `HOME_EXTENT_LONLAT`-based initial view, never a remembered pan position. This satisfies "refresh must not restore default layer settings, only reset the map to center on all of Zambia" together with the persistence above.
+- [x] Verified end-to-end with a real Playwright `page.reload()` (not just store inspection): unchecked Expired + District Boundaries, panned the map away, reloaded — both toggles stayed off, the untouched Cancelled toggle stayed on, and the map snapped back to the full-Zambia home view.
+
+## UX Polish (2026-08-26)
+- [x] `components/ui/tooltip.tsx` (base-ui, already installed but unused) wired into `ToolRail.tsx` — the 7 spatial-tool icons now show real tooltips (labelled, positioned, animated) instead of native `title` attributes. `TooltipProvider` wraps the app in `AppShell.tsx`.
+- [x] Theme now seeds from `prefers-color-scheme: dark` on mount (`AppShell.tsx`) instead of always forcing light. Theme itself still intentionally does **not** persist across reloads (per the store's existing partialize contract — not touched), so this only affects the very first render each load, not a remembered per-user choice.
+- [x] Panel/popover entrance animations added via the already-installed `tw-animate-css` utilities (`animate-in`/`fade-in`/`slide-in-from-*`) — `LeftPanel`, `RightPanel`, `ToolStatusPanel`, `AttributeTable`, and the top-bar search dropdown/notice all now transition in instead of popping.
+- [x] New `components/shell/Toaster.tsx` + `toastMessage`/`showToast` in `useMapStore` (not persisted) — small auto-dismissing (2.5s) confirmation bubble, wired to CSV/GeoJSON export in `AttributeTable` and to "clear tool & selection" (`ToolRail`, `RightPanel`'s multi-select close).
+- [x] New `components/layers/FloatingLegend.tsx` — compact status-color legend + click-to-toggle, shown bottom-left of the map only when the left sidebar is collapsed, so the color key isn't fully lost when a user hides the sidebar for more map space.
+- [x] New `components/shell/HelpButton.tsx` — floating "?" (top-right of map) with a 4-bullet orientation popover; auto-opens once per browser (`localStorage` key `mining-cadastre-help-seen`), reopenable anytime after. Also covers the "what does the right panel do" orientation gap without permanently reserving map width for an idle-state panel (see note below).
+- [x] `TopSearchBar.tsx` — the 8-result-capped dropdown now shows "See all N results in Search tab →" when more results exist; clicking it carries the query into the sidebar's Search tab (`setSearchQuery`/`setLeftTab`/new `setLeftOpen` action) instead of leaving the two search UIs disconnected.
+- [x] `TopBar.tsx` — CRS-format/Table/Theme buttons merged into one visually-grouped segmented control (was three loose separately-bordered pills); no color/dark-mode logic changed, purely the grouping.
+- [x] `AppShell.tsx` — subtle loading overlay ("Loading licence data…" + spinner) over the map area while the initial `/api/licences` fetch is in flight, instead of the licence layer just popping in silently.
+- **Deliberately not done:** an always-rendered idle/empty state in `RightPanel` (it still returns `null` and the panel is entirely absent until something is selected) — that would permanently cost map width, which conflicts with "the map is the application" from CLAUDE.md's project overview. Orientation for first-time users is instead covered by the new Help popover above.
+- Verified: `npm run lint` / `npm run typecheck` / `npm run build` all clean; driven end-to-end with a headless-Chromium Playwright script (loading overlay, help auto-open, tool tooltip, floating legend + toggle, search "see all" → Search tab handoff, export → toast → auto-dismiss, dark mode) — zero console errors across the whole pass.
+- **Fixed same day:** the new floating `HelpButton` (`top-3 right-3`) landed on the exact same spot as the pre-existing compass/rotate-reset control, fully covering it (later in DOM order, same z-index wins the tie) — the "N" reset-rotation button was unreachable. Similarly the new `FloatingLegend` (`bottom-3 left-3`) covered the pre-existing scale-bar control (`bottom-8 left-3`). Neither was caught by the first verification pass because it only checked that each new element *appeared*, not whether it collided with something already there. Fixed by moving `HelpButton` to `top-40 right-3` (stacked below the zoom/home control group) and `FloatingLegend` to `bottom-16 left-3` (clears the scale bar). Re-verified via cropped screenshots of both corners. Lesson: when adding a new floating map control, check it against the full existing set of floating-control positions (`ToolRail`, `ToolStatusPanel`, `ZoomHomeControl`, the compass/scale-bar/overview-map refs in `MapCanvas.tsx`, `BasemapSwitcher`), not just that the new element itself renders.
+
+## Rendering Performance (2026-08-26)
+- [x] **Duplicate `/api/licences` fetch removed.** `lib/data/licenceLayer.ts`'s `createLicenceLayer()` used to fetch `/api/licences` itself (independent of, and duplicating, the module-cached fetch in `lib/useLicences.ts` that every other UI component already shares). Replaced its internal `refresh()` (fetch + parse) with a `setData(geojson)` method that just parses GeoJSON already in hand; `MapCanvas.tsx` now feeds it from the same `useLicences()` hook used everywhere else, via a `useEffect` keyed on the hook's data. Verified via a Playwright network-listener script: requests to `/api/licences` went from 2 to 1 per page load. This also means the loading overlay added earlier (driven by the same hook) now genuinely reflects when the map's features finish loading too, not just when the sidebar/table's copy of the data is ready.
+- [x] **Hover no longer forces a full-layer restyle.** `MapCanvas.tsx`'s licence-styling effect used to depend on `hoveredLicenceId`, so every mouse-move-driven hover change called `layer.setStyle(...)`, forcing OpenLayers to re-invoke `licenceStyleFunction` (allocating new `Style`/`Fill`/`Stroke`/`Text` objects) for *every visible feature*, not just the one whose state changed — invisible at today's ~56 features, but the same class of bug as the already-documented `pointermove` lag fix, latent until the dataset grows. Split into two effects: a "base" style effect (opacity/selected/tool-selection/flash/status-visibility — unchanged, still a full-layer restyle, but these are click-driven and rare) that excludes hover, and a new hover-only effect that restyles just the 1-2 affected features directly via `feature.setStyle(...)`, using a new O(1) `getFeatureById()` index (`Map<string, Feature>`) added to `licenceLayer.ts` instead of a linear scan. Un-hovering a feature calls `feature.setStyle(undefined)` to fall back to the base layer style function — correct even if that feature is still selected/tool-selected/flashing, since the base function already accounts for those independently of hover.
+- Verified: `npm run lint` / `npm run typecheck` / `npm run build` clean. Playwright passes confirmed: fetch count 1 (was 2), zero console/page errors through search→select→zoom→hover-away→hover-neighbor, and a zoomed screenshot showing the selected parcel's thick navy outline rendering correctly (distinct from unselected neighbors) — i.e. the hover/select styling split didn't regress the navy-outline behavior CLAUDE.md flags as previously fixed.
+
+## Basemap tile loading — diagnosed, not a code bug (2026-08-26)
+User reported the basemap (world imagery under the boundary/licence layers) had disappeared. Investigated `components/map/basemapLayer.ts` and `config/basemaps.ts` — unchanged, correct: a standard OL `XYZ` source pointed at `tile.openstreetmap.org` (default) / ArcGIS Online. A Playwright network-listener script showed the app *does* request the right tiles (20 requests on load), but in this sandboxed dev/test environment the large majority never get a response — `page.on("requestfailed")` eventually surfaced `net::ERR_CONNECTION_TIMED_OUT` for them, while a plain `curl` to the same tile URL from the shell succeeded (slowly). Switching the active basemap to the Esri providers in the same session showed the same stall. This points to the *headless browser process specifically* lacking reliable outbound internet access in this sandbox (a plausible, common sandboxing boundary — shell/tool network access and browser-process network access are often governed by different policies), not a code regression — nothing in the layer/config code was touched by anything in this session prior to the report, and the basemap-swap logic (`MapCanvas.tsx`'s `basemapId` effect) is unchanged since it was written.
+**Not yet resolved** — needs the user to confirm in their own real browser (not this sandbox) whether tiles actually fail to load there too (check DevTools → Network tab for `tile.openstreetmap.org` requests stuck pending/red). If it reproduces there too, likely causes to check: an ad-blocker/privacy extension blocking the tile host, a corporate proxy/VPN, or (less likely, no 403 observed) OSM's tile-usage-policy throttling. If needed, `DEFAULT_BASEMAP_ID` in `config/basemaps.ts` is a one-line swap to a different provider (e.g. `esri-topo`, which needs no API key).
+
+## Mobile horizontal-overflow fix (2026-08-26)
+User asked about mobile viewability. Emulated an iPhone 13 (390×664 CSS px) via Playwright and found the page genuinely overflowed horizontally — `document.documentElement.scrollWidth` was 846px against a 390px viewport, and the top-bar search input's rendered width came back as 0px (functionally gone). Root causes, found and fixed:
+- [x] `components/shell/TopBar.tsx` — the right-side cluster (`CoordinateReadout` + CRS-format/Table/Theme segmented control + fullscreen button) was `shrink-0` with long text labels and no responsive handling. `CoordinateReadout` (redundant with `StatusBar`'s own Lon/Lat readout) now hides below `lg`; the segmented control's labels ("EPSG:4326 · WGS 84", "Table", "Light"/"Dark") collapse to icon/short-code-only below `sm`; the wordmark subtitle ("Zambia · Licence Map") hides below `sm`; the search-bar flex wrapper and `TopSearchBar`'s own internal flex chain (including the `<input>` itself) got `min-w-0` — without it, flex items default to `min-width:auto`, which for an `<input>` floors at its browser-default intrinsic width and blocks shrinking regardless of ancestor `flex-1`, a classic flexbox gotcha.
+- [x] **Real root cause of the remaining ~90px:** with the sidebar open by default (`leftOpen: true`, unconditional regardless of viewport — left as-is, out of scope for this pass), the map's own container shrinks to a sliver (~82px on a 390px phone), and `BasemapSwitcher` (`components/map/controls/BasemapSwitcher.tsx`) — centered, ~257px of fixed-width, `whitespace-nowrap` pill content — has no shrink/wrap behavior and no ancestor clipping, so it spills far past the actual screen edge and drags the whole page into horizontal scroll. Fixed by adding `overflow-hidden` to the map's own relative container in `AppShell.tsx` — contains any floating map control (this one, and any other future one) to the map's actual bounds instead of leaking into the page, without changing `BasemapSwitcher`'s design or the sidebar-default-open behavior.
+- [x] **Last ~30px:** `StatusBar.tsx`'s six status fields (`gap-4`, no wrap handling) also didn't fit, individually text-wrapping onto two lines rather than causing page overflow directly — but did contribute the final bit of `scrollWidth`. Added `overflow-x-auto` + `whitespace-nowrap` so the bar scrolls internally instead of breaking page layout.
+- Verified via Playwright at multiple widths: iPhone 13 (390px) and Pixel 7 (412px) — zero overflow (`scrollWidth === clientWidth`). Legacy iPhone SE 1st-gen (320px, a shrinking share of real traffic) still has ~40px of residual overflow from TopBar's own irreducible minimum width — not chased further since it's outside the "fix the overflow bug" scope the user chose (declined broader mobile redesign: default-closed sidebar on mobile, floating-control relayout, 44px touch targets, RightPanel/AttributeTable at mobile width — all noted as options if wanted later). Desktop (1440px) screenshot-verified unaffected — no visual regression. `npm run lint` / `npm run typecheck` clean.
+
+## Quality Gates
+- [x] `npm run lint` clean
+- [x] `npm run typecheck` clean
+- [x] `npm run build` clean (one informational Turbopack file-tracing warning — see the Data Provider section in CLAUDE.md, not a correctness issue, matters for deployment bundle size)
+- [x] Visually + programmatically verified end-to-end offline via headless-Chromium (Playwright): map renders with all 56 regenerated licences over the real Zambia boundary; hover/click/search/select/zoom-to-feature; right-panel detail; Layers/Search tabs (Tools tab confirmed absent — 0 matches); measure-distance tool click-to-click flow; dark mode legibility (confirmed via both screenshots and `getComputedStyle` checks, since screenshots alone were misleading once — see Issues log); district-boundary toggle. No console errors in any pass.
+- [!] Full PostGIS-backed verification (plan.md § Verification) still needs a live Supabase project — same steps as Database / Seed above.
+
+## Deferred to Phase 2 (per plan.md, not started)
+Shapefile/KML/GPX **import** (distinct from the admin boundaries, which are now real — this is about user-uploaded files), PNG/PDF map export, vector tiles, geometry simplification by zoom, Web Workers, layer drag-ordering + metadata, ST_Union/ST_Intersection overlay tools, 100k+ scale tuning, dedicated "Nearest Licence" UI button, `outputFileTracingIncludes` scoping for the shapefile-reading routes before deploy.
+
+---
+
+## Issues encountered & fixed
+- **`git` is not installed on this machine** (checked PATH and common install locations). Version control and Vercel deployment are blocked until Git is installed. User chose to skip this for now (2026-07-04) and focus on offline development instead.
+- **create-next-app rejected the project directory name** ("Mining Cadastre" has a space and capitals, invalid npm package name). Fixed by scaffolding into a temporary validly-named subfolder (`mining-cadastre`) and moving all generated files up to the project root.
+- **base-ui (shadcn) `Slider`/`Select` onValueChange signatures** differ from Radix: `Slider` passes `number | readonly number[]` (not always an array) and `Select` passes `string | null` (not bare `string`). Fixed by normalizing at each call site rather than changing the store's types.
+- **`react-hooks/set-state-in-effect` lint rule** flagged synchronous `setState` calls used purely to reset state when a dependency became falsy. Fixed by fetching the full licence collection once via a shared `lib/useLicences.ts` hook and deriving filtered/reset state with `useMemo` instead of a second effect.
+- **OpenLayers controls with a custom `target` (ScaleLine/OverviewMap/Rotate) leaked duplicate DOM nodes on remount.** `map.setTarget(undefined)` doesn't tear down controls rendered into our own external ref `<div>`s. Fixed by keeping references to each control and calling `map.removeControl(...)` explicitly in the effect's cleanup.
+- **Spatial tools silently did nothing on map clicks.** `useSpatialTools()`'s handlers closed over reactive store values from mount time (OL's `singleclick`/`dblclick` listeners are registered once, never re-subscribed), so they always saw `activeTool: null`. Fixed by reading gating state fresh via `useMapStore.getState()` inside the handler bodies. Caught only by driving the app with real headless-browser clicks — the bug was invisible from the code or from store-state inspection alone.
+- **Playwright click timing:** two `page.mouse.click()` calls fired ~200ms apart got coalesced by OpenLayers into a single `dblclick` — not a bug, but automated map-click tests need >250ms between clicks to reliably test single-click behavior.
+- **`shapefile` npm package's string-path handling resolved to a fetch()-based reader instead of the Node `fs` reader under Turbopack's bundling**, failing every boundary request with a generic `{"error":"fetch failed"}` (500). Root cause: the package's `path-source` dependency has separate browser (`fetch.js`) and Node (`file-source`) entry points selected via package.json export conditions, and the bundler resolved the wrong one for local string paths. Fixed by reading the `.shp`/`.dbf` files ourselves with `fs.readFileSync` and passing `Uint8Array` buffers directly to `shapefile.open()` — buffer input takes a completely different, unambiguous code path (`array-source`) inside the library. Caught by testing the actual endpoint, not just by code review — the code looked correct and typechecked fine.
+- **`turf.booleanOverlap` reported false-positive overlaps between exactly edge-adjacent polygons** (two rectangles sharing one boundary edge, zero actual intersection area) during licence-geometry generation. Verified the false positive directly (`turf.intersect` on the same pair returned 0 km² while `booleanOverlap` returned `true`) before trusting it. Fixed two ways: (1) the shelf-packing algorithm now leaves a small ~90m real gap between adjacent parcels (`GAP_DEG` in `scripts/generate-licences.ts`) so touching is never exact-floating-point-edge-coincident, and (2) the generator's own overlap check was rewritten to test actual intersection *area* (with a bbox pre-filter for speed) rather than trusting `booleanOverlap`'s binary result.
+- **Dark-mode text-legibility bugs found by computed-style inspection, not just screenshots.** The active Layers/Search tab label used a literal `text-brand-navy` (correct in light mode, illegibly dark-on-dark once the sidebar itself went dark) — a screenshot alone was ambiguous here (the blue underline drew the eye) but `getComputedStyle(...).color` on the element made it unambiguous: `rgb(15, 42, 67)` on a `lab(7.78 ...)` (near-black) background. Fixed with a `dark:text-white` companion class. Lesson: when auditing theme-reactive contrast, verify with computed styles, not just a rendered screenshot — screenshots can be visually misleading (bright adjacent content, JPEG-like compression, etc.) in ways `getComputedStyle` isn't.
+- **The Home button (`MapContext.tsx` → `resetHome`) was a complete no-op** — proven by comparing the Lon/Lat readout at a fixed screen pixel before and after clicking it (identical both times), not just a visual before/after screenshot (which can look "close enough" at a glance). Root cause: `view.fit(extent, {duration: 300, ...})` queues an animated transition, but the very next line called `view.setRotation(0)` — OL's plain property setters cancel any in-flight view animation, so the rotation reset was cancelling the fit's pan/zoom animation before it ever rendered a frame. Fixed by reordering (`setRotation(0)` before `fit()`, not after) and additionally passing `size: map.getSize()` to `fit()` (defensive — `fit()` needs the viewport's pixel size to compute a resolution, unlike `animate({zoom})` which doesn't). Also updated `HOME_EXTENT_LONLAT` to Zambia's exact real bounding box (from the shapefile) instead of an approximate hand-picked rectangle, so Home now precisely centers and fits the whole country. Verified by comparing the actual Lon/Lat readout, not just eyeballing a screenshot — the bug would have been easy to miss otherwise since the map still rendered fine, it just silently ignored every click.
+- **Playwright selector ambiguity produced a silent false negative while verifying the measurement HUD.** A test selector like `div.bg-brand-navy.font-mono` matched both the new HUD *and* `StatusBar` (which happens to share both classes); `.textContent()` on a multi-match locator throws, and a blanket `.catch(() => null)` swallowed that error, making a working feature look broken. Fixed the test (not the app) by adding a `data-testid="measure-hud"` attribute for an unambiguous selector. Lesson: a `.catch(() => null)` around a Playwright locator call can mask "strict mode violation" (multiple matches) just as easily as "not found" — when a check unexpectedly returns null, verify a unique match before suspecting the app.
+- **Tool clicks felt laggy/delayed** — user-reported, and traceable directly to the just-added live-measurement HUD: every raw `pointermove` event was doing a Zustand store write, an OL tool-overlay geometry rebuild (`toolLayer.ts`'s `update()` — for `selectCircle`/`buffer` this includes building a full 64-step `turf.circle` polygon), a `turf`-based live-measurement calculation, and a React state update (`setMeasureHud`, which always constructs a new object so it can never bail out via `Object.is`) — all on *every* raw pointer event, which can fire 100-200+ times/sec on high-poll-rate mice/trackpads, far outrunning the ~60/sec the screen can even repaint. That backs up the main thread enough to delay subsequent click processing. Fixed by the standard technique for this class of problem: stash only the latest `pointermove` event in a ref and do the actual work (store update, overlay rebuild, HUD calculation) in a `requestAnimationFrame` callback, so it runs at most once per repaint regardless of how many raw events arrive in between — with the rAF handle cancelled on unmount and on `mouseleave`. Not independently re-verified with real native high-frequency mouse input (Playwright's synthetic `mouse.move()` goes through a CDP round-trip per call and can't replicate that), but the throttling pattern is the well-established fix for exactly this symptom, and functional behavior (HUD accuracy, click responsiveness) was confirmed unaffected.

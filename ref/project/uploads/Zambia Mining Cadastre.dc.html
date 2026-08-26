@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #0F2A43; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+  </style>
+  <script src="./cadastre-data.js"></script>
+</helmet>
+
+<div style="position:fixed; inset:0; display:flex; flex-direction:column; font-family:'IBM Plex Sans',sans-serif; background:#F8FAFC; color:#1E293B; overflow:hidden; user-select:none;">
+
+  <!-- TOP BAR -->
+  <div style="height:56px; min-height:56px; display:flex; align-items:center; gap:16px; padding:0 16px; background:#0F2A43; border-bottom:1px solid #0B2136; box-shadow:0 1px 0 rgba(0,0,0,0.15);">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div onClick="{{ toggleLeftPanel }}" style="width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; background:rgba(255,255,255,0.06);" style-hover="background:rgba(255,255,255,0.14);">
+        <div style="display:flex; flex-direction:column; gap:3px;">
+          <div style="width:16px; height:2px; background:#CBD5E1;"></div>
+          <div style="width:16px; height:2px; background:#CBD5E1;"></div>
+          <div style="width:16px; height:2px; background:#CBD5E1;"></div>
+        </div>
+      </div>
+      <div style="width:26px; height:26px; background:#D97706; border-radius:6px; transform:rotate(45deg); flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:15px; font-weight:600; color:#F8FAFC; line-height:1.1;">Mining Cadastre</div>
+        <div style="font-size:11px; color:#94A3B8; line-height:1.1; letter-spacing:0.02em;">ZAMBIA &middot; LICENCE MAP</div>
+      </div>
+    </div>
+
+    <div style="flex:1; max-width:520px; margin:0 auto;">
+      <input
+        value="{{ searchQuery }}"
+        onChange="{{ onSearchChange }}"
+        onFocus="{{ onSearchFocus }}"
+        placeholder="Search licence number, owner, or commodity&hellip;"
+        style="width:100%; box-sizing:border-box; height:34px; border-radius:17px; border:1px solid #1E4262; background:#173953; color:#F1F5F9; padding:0 16px; font-size:13px; font-family:'IBM Plex Sans',sans-serif; outline:none;"
+      />
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#B7C4D3; background:#173953; border:1px solid #1E4262; border-radius:6px; padding:5px 10px; min-width:190px; text-align:center;">{{ mouseLonLatText }}</div>
+      <div style="font-size:11px; font-weight:600; color:#93C5FD; background:#173953; border:1px solid #1E4262; border-radius:6px; padding:5px 10px; letter-spacing:0.02em;">EPSG:4326 &middot; WGS 84</div>
+      <div onClick="{{ onToggleTheme }}" style="position:relative; display:flex; align-items:center; gap:6px; height:30px; padding:0 10px; border-radius:6px; background:#173953; border:1px solid #1E4262; cursor:pointer;" style-hover="background:#1E4262;">
+        <div style="width:12px; height:12px; border-radius:50%; background:#FDE68A;"></div>
+        <span style="font-size:11.5px; color:#CBD5E1;">Light</span>
+        <sc-if value="{{ themeHint }}">
+          <div style="position:absolute; top:36px; right:0; background:#0F2A43; border:1px solid #1E4262; color:#E2E8F0; font-size:11px; padding:6px 10px; border-radius:6px; white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:50;">Dark theme — coming soon</div>
+        </sc-if>
+      </div>
+      <div onClick="{{ onPrint }}" title="Print" style="width:30px; height:30px; border-radius:6px; background:#173953; border:1px solid #1E4262; display:flex; align-items:center; justify-content:center; cursor:pointer;" style-hover="background:#1E4262;">
+        <div style="width:12px; height:9px; border:1.5px solid #CBD5E1; border-top:none;"></div>
+      </div>
+      <div onClick="{{ onToggleFullscreen }}" title="Fullscreen" style="width:30px; height:30px; border-radius:6px; background:#173953; border:1px solid #1E4262; display:flex; align-items:center; justify-content:center; cursor:pointer;" style-hover="background:#1E4262;">
+        <div style="width:13px; height:13px; border:1.5px solid #CBD5E1; border-radius:2px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN ROW -->
+  <div style="flex:1; display:flex; min-height:0; position:relative;">
+
+    <!-- LEFT PANEL -->
+    <sc-if value="{{ leftOpen }}" hint-placeholder-val="{{ true }}">
+      <div style="width:308px; min-width:308px; display:flex; flex-direction:column; background:#FFFFFF; border-right:1px solid #E2E8F0;">
+        <div style="display:flex; border-bottom:1px solid #E2E8F0;">
+          <div onClick="{{ setTabLayers }}" style="{{ tabStyleLayers }}">Layers</div>
+          <div onClick="{{ setTabSearch }}" style="{{ tabStyleSearch }}">Search</div>
+          <div onClick="{{ setTabTools }}" style="{{ tabStyleTools }}">Tools</div>
+        </div>
+
+        <!-- LAYERS TAB -->
+        <sc-if value="{{ isTabLayers }}">
+          <div style="flex:1; overflow-y:auto; padding:16px;">
+
+            <div style="margin-bottom:20px;">
+              <div style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em; margin-bottom:10px;">BASEMAP</div>
+              <div style="display:flex; gap:8px;">
+                <div onClick="{{ setBasemapLight }}" style="{{ basemapSwatchLight }}">
+                  <div style="width:100%; height:32px; border-radius:5px; background:#EAEFF5; border:1px solid #CBD5E1;"></div>
+                  <div style="font-size:10.5px; color:#475569; margin-top:4px; text-align:center;">Light</div>
+                </div>
+                <div onClick="{{ setBasemapTopo }}" style="{{ basemapSwatchTopo }}">
+                  <div style="width:100%; height:32px; border-radius:5px; background:#E7ECE0; border:1px solid #CBD5E1;"></div>
+                  <div style="font-size:10.5px; color:#475569; margin-top:4px; text-align:center;">Topographic</div>
+                </div>
+                <div onClick="{{ setBasemapSatellite }}" style="{{ basemapSwatchSatellite }}">
+                  <div style="width:100%; height:32px; border-radius:5px; background:#16201B; border:1px solid #CBD5E1;"></div>
+                  <div style="font-size:10.5px; color:#475569; margin-top:4px; text-align:center;">Satellite</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <div style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em;">ADMINISTRATIVE</div>
+              </div>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:8px;">
+                <input type="checkbox" checked="{{ showBoundaries }}" onChange="{{ toggleBoundaries }}" style="width:14px; height:14px; accent-color:#1D4E89;" />
+                <span style="font-size:12.5px; color:#334155;">Province Boundaries</span>
+              </label>
+              <div style="display:flex; align-items:center; gap:8px; padding-left:22px;">
+                <span style="font-size:10.5px; color:#94A3B8; width:44px;">Opacity</span>
+                <input type="range" min="0" max="1" step="0.05" value="{{ boundaryOpacity }}" onChange="{{ onBoundaryOpacityChange }}" style="flex:1; accent-color:#1D4E89;" />
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <div style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em;">MINING LICENCES</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <span style="font-size:10.5px; color:#94A3B8; width:44px;">Opacity</span>
+                <input type="range" min="0.3" max="1" step="0.05" value="{{ licenceOpacity }}" onChange="{{ onLicenceOpacityChange }}" style="flex:1; accent-color:#1D4E89;" />
+              </div>
+              <sc-for list="{{ statusRows }}" as="row" hint-placeholder-count="6">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:5px 0;">
+                  <input type="checkbox" checked="{{ row.checked }}" onChange="{{ row.onToggle }}" style="width:14px; height:14px; accent-color:{{ row.color }};" />
+                  <div style="width:10px; height:10px; border-radius:2px; background:{{ row.color }};"></div>
+                  <span style="font-size:12.5px; color:#334155; flex:1;">{{ row.status }}</span>
+                  <span style="font-size:11px; color:#94A3B8; font-family:'IBM Plex Mono',monospace;">{{ row.count }}</span>
+                </label>
+              </sc-for>
+            </div>
+
+          </div>
+        </sc-if>
+
+        <!-- SEARCH TAB -->
+        <sc-if value="{{ isTabSearch }}">
+          <div style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column;">
+            <div style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em; margin-bottom:10px;">FILTERS</div>
+
+            <div style="margin-bottom:10px;">
+              <div style="font-size:10.5px; color:#94A3B8; margin-bottom:4px;">Commodity</div>
+              <select value="{{ filterCommodity }}" onChange="{{ onFilterCommodityChange }}" style="width:100%; height:32px; border-radius:6px; border:1px solid #CBD5E1; background:#fff; font-size:12.5px; color:#334155; padding:0 8px;">
+                <sc-for list="{{ commodityOptions }}" as="opt" hint-placeholder-count="5">
+                  <option value="{{ opt }}">{{ opt }}</option>
+                </sc-for>
+              </select>
+            </div>
+            <div style="margin-bottom:10px;">
+              <div style="font-size:10.5px; color:#94A3B8; margin-bottom:4px;">Status</div>
+              <select value="{{ filterStatus }}" onChange="{{ onFilterStatusChange }}" style="width:100%; height:32px; border-radius:6px; border:1px solid #CBD5E1; background:#fff; font-size:12.5px; color:#334155; padding:0 8px;">
+                <sc-for list="{{ statusOptions }}" as="opt" hint-placeholder-count="5">
+                  <option value="{{ opt }}">{{ opt }}</option>
+                </sc-for>
+              </select>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div style="font-size:10.5px; color:#94A3B8; margin-bottom:4px;">Province</div>
+              <select value="{{ filterProvince }}" onChange="{{ onFilterProvinceChange }}" style="width:100%; height:32px; border-radius:6px; border:1px solid #CBD5E1; background:#fff; font-size:12.5px; color:#334155; padding:0 8px;">
+                <sc-for list="{{ provinceOptions }}" as="opt" hint-placeholder-count="5">
+                  <option value="{{ opt }}">{{ opt }}</option>
+                </sc-for>
+              </select>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-top:1px solid #E2E8F0; margin-bottom:6px;">
+              <span style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em;">RESULTS</span>
+              <span style="font-size:11px; color:#94A3B8; font-family:'IBM Plex Mono',monospace;">{{ resultCountText }}</span>
+            </div>
+
+            <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+              <sc-for list="{{ searchResults }}" as="lic" hint-placeholder-count="6">
+                <div onClick="{{ lic.onClick }}" style="border:1px solid #E2E8F0; border-radius:7px; padding:8px 10px; cursor:pointer;" style-hover="border-color:#94A3B8; background:#F8FAFC;">
+                  <div style="display:flex; align-items:center; justify-content:between; gap:6px;">
+                    <span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#1E293B; font-weight:600;">{{ lic.number }}</span>
+                    <span style="margin-left:auto; font-size:9.5px; font-weight:600; color:#fff; background:{{ lic.statusColor }}; padding:2px 6px; border-radius:8px;">{{ lic.status }}</span>
+                  </div>
+                  <div style="font-size:11.5px; color:#475569; margin-top:3px;">{{ lic.owner }}</div>
+                  <div style="font-size:10.5px; color:#94A3B8; margin-top:2px;">{{ lic.commodity }} &middot; {{ lic.province }} &middot; {{ lic.areaText }}</div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ noResults }}">
+                <div style="text-align:center; color:#94A3B8; font-size:12px; padding:24px 8px;">No licences match these filters.</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- TOOLS TAB -->
+        <sc-if value="{{ isTabTools }}">
+          <div style="flex:1; overflow-y:auto; padding:16px;">
+            <div style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em; margin-bottom:10px;">MEASURE</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px;">
+              <div onClick="{{ selectToolDistance }}" style="{{ toolBtnDistance }}">Distance</div>
+              <div onClick="{{ selectToolArea }}" style="{{ toolBtnArea }}">Area</div>
+            </div>
+
+            <div style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em; margin-bottom:10px;">SELECT</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+              <div onClick="{{ selectToolRect }}" style="{{ toolBtnRect }}">Rectangle</div>
+              <div onClick="{{ selectToolCircle }}" style="{{ toolBtnCircle }}">Circle</div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr; gap:8px; margin-bottom:18px;">
+              <div onClick="{{ selectToolPolygon }}" style="{{ toolBtnPolygon }}">Polygon</div>
+            </div>
+
+            <div style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em; margin-bottom:10px;">BUFFER</div>
+            <div onClick="{{ selectToolBuffer }}" style="{{ toolBtnBuffer }} margin-bottom:10px;">Buffer Around Point</div>
+            <sc-if value="{{ isToolBuffer }}">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:18px; padding-left:2px;">
+                <span style="font-size:10.5px; color:#94A3B8; width:60px;">Radius</span>
+                <input type="range" min="1" max="100" step="1" value="{{ bufferRadiusKm }}" onChange="{{ onBufferRadiusChange }}" style="flex:1; accent-color:#1D4E89;" />
+                <span style="font-size:11px; color:#334155; font-family:'IBM Plex Mono',monospace; width:44px; text-align:right;">{{ bufferRadiusText }}</span>
+              </div>
+            </sc-if>
+
+            <div style="background:#F1F5F9; border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+              <div style="font-size:12px; color:#334155; line-height:1.5;">{{ toolInstruction }}</div>
+            </div>
+
+            <sc-if value="{{ hasToolSelection }}">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-top:1px solid #E2E8F0; margin-bottom:6px;">
+                <span style="font-size:11px; font-weight:600; color:#64748B; letter-spacing:0.05em;">{{ toolSelectionHeader }}</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto;">
+                <sc-for list="{{ toolSelectionList }}" as="lic" hint-placeholder-count="3">
+                  <div onClick="{{ lic.onClick }}" style="border:1px solid #E2E8F0; border-radius:7px; padding:7px 10px; cursor:pointer;" style-hover="border-color:#94A3B8; background:#F8FAFC;">
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1E293B; font-weight:600;">{{ lic.number }}</div>
+                    <div style="font-size:10.5px; color:#94A3B8;">{{ lic.commodity }} &middot; {{ lic.areaText }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <div onClick="{{ clearTool }}" style="margin-top:14px; text-align:center; font-size:12px; color:#64748B; border:1px solid #E2E8F0; border-radius:7px; padding:8px; cursor:pointer;" style-hover="background:#F1F5F9;">Clear tool &amp; selection</div>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ leftClosed }}">
+      <div style="width:44px; min-width:44px; background:#FFFFFF; border-right:1px solid #E2E8F0; display:flex; flex-direction:column; align-items:center; padding-top:14px; gap:6px;">
+        <div onClick="{{ openLayers }}" title="Layers" style="width:30px; height:30px; border-radius:6px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; cursor:pointer;"><div style="width:12px; height:12px; border:1.5px solid #475569; transform:rotate(45deg);"></div></div>
+        <div onClick="{{ openSearch }}" title="Search" style="width:30px; height:30px; border-radius:6px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; cursor:pointer;"><div style="width:10px; height:10px; border-radius:50%; border:1.5px solid #475569;"></div></div>
+        <div onClick="{{ openTools }}" title="Tools" style="width:30px; height:30px; border-radius:6px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; cursor:pointer;"><div style="width:12px; height:12px; border:1.5px solid #475569; border-radius:2px;"></div></div>
+      </div>
+    </sc-if>
+
+    <!-- MAP AREA -->
+    <div ref="{{ mapContainerRef }}" style="flex:1; position:relative; background:#DCE3EA; overflow:hidden; cursor:{{ mapCursor }};">
+      <svg
+        ref="{{ svgRef }}"
+        viewBox="{{ viewBoxAttr }}"
+        preserveAspectRatio="xMidYMid meet"
+        onWheel="{{ onWheel }}"
+        onMouseDown="{{ onMouseDown }}"
+        onMouseMove="{{ onMouseMove }}"
+        onMouseUp="{{ onMouseUp }}"
+        onMouseLeave="{{ onMouseLeaveSvg }}"
+        onDoubleClick="{{ onSvgDoubleClick }}"
+        style="width:100%; height:100%; display:block;"
+      >
+        <rect x="0" y="0" width="{{ mapWidth }}" height="{{ mapHeight }}" fill="{{ basemapFill }}"></rect>
+
+        <g transform="{{ transformStr }}">
+
+          <sc-if value="{{ showBoundaries }}">
+            <sc-for list="{{ provinceItems }}" as="prov" hint-placeholder-count="10">
+              <path d="{{ prov.d }}" fill="#C7D2DD" fill-opacity="{{ boundaryFillOpacity }}" stroke="#7C8CA0" stroke-width="{{ boundaryStrokeWidth }}"></path>
+            </sc-for>
+            <sc-for list="{{ provinceItems }}" as="prov" hint-placeholder-count="10">
+              <text x="{{ prov.cx }}" y="{{ prov.cy }}" font-size="{{ labelFontSize }}" fill="#5B6B80" font-family="IBM Plex Sans, sans-serif" text-anchor="middle" style="pointer-events:none;">{{ prov.name }}</text>
+            </sc-for>
+          </sc-if>
+
+          <sc-for list="{{ mapLicenses }}" as="lic" hint-placeholder-count="40">
+            <polygon
+              points="{{ lic.pointsAttr }}"
+              fill="{{ lic.fillColor }}"
+              fill-opacity="{{ lic.fillOpacity }}"
+              stroke="{{ lic.strokeColor }}"
+              stroke-width="{{ lic.strokeWidth }}"
+              onMouseDown="{{ lic.onStopProp }}"
+              onMouseEnter="{{ lic.onHoverIn }}"
+              onMouseLeave="{{ lic.onHoverOut }}"
+              onClick="{{ lic.onSelect }}"
+              style="cursor:pointer;"
+            ></polygon>
+          </sc-for>
+
+          <!-- tool overlays -->
+          <sc-if value="{{ showMeasureLine }}">
+            <polyline points="{{ measureLinePoints }}" fill="none" stroke="#0F2A43" stroke-width="{{ overlayStroke }}" stroke-dasharray="{{ overlayDash }}"></polyline>
+            <sc-for list="{{ measureVertices }}" as="v" hint-placeholder-count="4">
+              <circle cx="{{ v.x }}" cy="{{ v.y }}" r="{{ overlayDot }}" fill="#0F2A43"></circle>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ showMeasureArea }}">
+            <polygon points="{{ measureAreaPoints }}" fill="#1D4E89" fill-opacity="0.15" stroke="#0F2A43" stroke-width="{{ overlayStroke }}" stroke-dasharray="{{ overlayDash }}"></polygon>
+            <sc-for list="{{ measureVertices }}" as="v" hint-placeholder-count="4">
+              <circle cx="{{ v.x }}" cy="{{ v.y }}" r="{{ overlayDot }}" fill="#0F2A43"></circle>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ showRectOverlay }}">
+            <rect x="{{ rectOverlay.x }}" y="{{ rectOverlay.y }}" width="{{ rectOverlay.w }}" height="{{ rectOverlay.h }}" fill="#D97706" fill-opacity="0.15" stroke="#B45309" stroke-width="{{ overlayStroke }}" stroke-dasharray="{{ overlayDash }}"></rect>
+          </sc-if>
+          <sc-if value="{{ showCircleOverlay }}">
+            <circle cx="{{ circleOverlay.x }}" cy="{{ circleOverlay.y }}" r="{{ circleOverlay.r }}" fill="#D97706" fill-opacity="0.15" stroke="#B45309" stroke-width="{{ overlayStroke }}" stroke-dasharray="{{ overlayDash }}"></circle>
+          </sc-if>
+          <sc-if value="{{ showPolySelectOverlay }}">
+            <polygon points="{{ polySelectPoints }}" fill="#D97706" fill-opacity="0.15" stroke="#B45309" stroke-width="{{ overlayStroke }}" stroke-dasharray="{{ overlayDash }}"></polygon>
+            <sc-for list="{{ measureVertices }}" as="v" hint-placeholder-count="4">
+              <circle cx="{{ v.x }}" cy="{{ v.y }}" r="{{ overlayDot }}" fill="#B45309"></circle>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ showBufferOverlay }}">
+            <circle cx="{{ bufferOverlay.x }}" cy="{{ bufferOverlay.y }}" r="{{ bufferOverlay.r }}" fill="#1D4E89" fill-opacity="0.12" stroke="#0F2A43" stroke-width="{{ overlayStroke }}" stroke-dasharray="{{ overlayDash }}"></circle>
+            <circle cx="{{ bufferOverlay.x }}" cy="{{ bufferOverlay.y }}" r="{{ overlayDot }}" fill="#0F2A43"></circle>
+          </sc-if>
+
+        </g>
+      </svg>
+
+      <!-- floating measure result chip -->
+      <sc-if value="{{ measureResultText }}">
+        <div style="position:absolute; top:14px; left:50%; transform:translateX(-50%); background:#0F2A43; color:#F8FAFC; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; padding:8px 16px; border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,0.25); pointer-events:none;">{{ measureResultText }}</div>
+      </sc-if>
+
+      <!-- zoom controls -->
+      <div style="position:absolute; top:14px; right:14px; display:flex; flex-direction:column; background:#fff; border-radius:8px; box-shadow:0 2px 10px rgba(15,42,67,0.18); overflow:hidden;">
+        <div onClick="{{ zoomIn }}" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:18px; color:#334155; cursor:pointer; border-bottom:1px solid #E2E8F0;" style-hover="background:#F1F5F9;">+</div>
+        <div onClick="{{ zoomOut }}" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:18px; color:#334155; cursor:pointer; border-bottom:1px solid #E2E8F0;" style-hover="background:#F1F5F9;">&minus;</div>
+        <div onClick="{{ resetView }}" title="Home" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer;" style-hover="background:#F1F5F9;"><div style="width:12px; height:12px; border:1.5px solid #334155; border-radius:1px;"></div></div>
+      </div>
+
+      <!-- compass -->
+      <div style="position:absolute; top:14px; right:58px; width:34px; height:34px; background:#fff; border-radius:50%; box-shadow:0 2px 10px rgba(15,42,67,0.18); display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="5,0 8,8 5,6 2,8" fill="#1D4E89"></polygon></svg>
+        <span style="font-size:8px; font-weight:700; color:#1D4E89; margin-top:1px;">N</span>
+      </div>
+
+      <!-- legend -->
+      <div style="position:absolute; bottom:38px; left:14px; background:#fff; border-radius:8px; box-shadow:0 2px 10px rgba(15,42,67,0.18); padding:10px 12px; min-width:150px;">
+        <div style="font-size:10px; font-weight:600; color:#64748B; letter-spacing:0.05em; margin-bottom:6px;">LICENCE STATUS</div>
+        <sc-for list="{{ legendItems }}" as="item" hint-placeholder-count="6">
+          <div style="display:flex; align-items:center; gap:7px; padding:2px 0;">
+            <div style="width:9px; height:9px; border-radius:2px; background:{{ item.color }};"></div>
+            <span style="font-size:11px; color:#334155;">{{ item.status }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- scale bar -->
+      <div style="position:absolute; bottom:12px; left:14px; display:flex; align-items:center; gap:6px;">
+        <div style="width:{{ scaleBarWidthPx }}px; height:4px; border:1.5px solid #334155; border-top:none; box-sizing:border-box;"></div>
+        <span style="font-size:10.5px; color:#334155; font-family:'IBM Plex Mono',monospace;">{{ scaleBarLabel }}</span>
+      </div>
+
+      <!-- overview inset -->
+      <div style="position:absolute; bottom:12px; right:14px; width:140px; height:120px; background:#fff; border-radius:8px; box-shadow:0 2px 10px rgba(15,42,67,0.18); overflow:hidden;">
+        <svg viewBox="{{ viewBoxAttr }}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+          <rect x="0" y="0" width="{{ mapWidth }}" height="{{ mapHeight }}" fill="#EEF2F6"></rect>
+          <sc-for list="{{ provinceItems }}" as="prov" hint-placeholder-count="10">
+            <path d="{{ prov.d }}" fill="#C7D2DD" stroke="#94A3B8" stroke-width="2"></path>
+          </sc-for>
+          <rect x="{{ overviewRect.x }}" y="{{ overviewRect.y }}" width="{{ overviewRect.w }}" height="{{ overviewRect.h }}" fill="#1D4E89" fill-opacity="0.15" stroke="#1D4E89" stroke-width="3"></rect>
+        </svg>
+      </div>
+
+      <!-- satellite watermark -->
+      <sc-if value="{{ isSatellite }}">
+        <div style="position:absolute; top:14px; left:14px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.5); letter-spacing:0.04em;">SATELLITE IMAGERY — placeholder</div>
+      </sc-if>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <sc-if value="{{ showRightPanel }}">
+      <div style="width:320px; min-width:320px; background:#fff; border-left:1px solid #E2E8F0; display:flex; flex-direction:column; overflow-y:auto;">
+
+        <sc-if value="{{ showSingleDetail }}">
+          <div style="padding:18px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;">
+              <div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600; color:#0F2A43;">{{ selected.number }}</div>
+                <div style="font-size:11.5px; color:#94A3B8; margin-top:2px;">{{ selected.licenceType }}</div>
+              </div>
+              <div onClick="{{ closeSelection }}" style="width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#94A3B8; font-size:16px; line-height:1;" style-hover="background:#F1F5F9;">&times;</div>
+            </div>
+
+            <div style="display:inline-block; font-size:11px; font-weight:600; color:#fff; background:{{ selected.statusColor }}; padding:3px 10px; border-radius:9px; margin-bottom:16px;">{{ selected.status }}</div>
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <div style="font-size:10.5px; color:#94A3B8; text-transform:uppercase; letter-spacing:0.04em;">Owner</div>
+                <div style="font-size:13.5px; color:#1E293B; margin-top:2px;">{{ selected.owner }}</div>
+              </div>
+              <div style="display:flex; gap:16px;">
+                <div style="flex:1;">
+                  <div style="font-size:10.5px; color:#94A3B8; text-transform:uppercase; letter-spacing:0.04em;">Commodity</div>
+                  <div style="font-size:13.5px; color:#1E293B; margin-top:2px;">{{ selected.commodity }}</div>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:10.5px; color:#94A3B8; text-transform:uppercase; letter-spacing:0.04em;">Area</div>
+                  <div style="font-size:13.5px; color:#1E293B; margin-top:2px;">{{ selected.areaText }}</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:16px;">
+                <div style="flex:1;">
+                  <div style="font-size:10.5px; color:#94A3B8; text-transform:uppercase; letter-spacing:0.04em;">Province</div>
+                  <div style="font-size:13.5px; color:#1E293B; margin-top:2px;">{{ selected.province }}</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:16px; padding-top:10px; border-top:1px solid #F1F5F9;">
+                <div style="flex:1;">
+                  <div style="font-size:10.5px; color:#94A3B8; text-transform:uppercase; letter-spacing:0.04em;">Issued</div>
+                  <div style="font-size:13px; color:#1E293B; margin-top:2px;">{{ selected.issueDate }}</div>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:10.5px; color:#94A3B8; text-transform:uppercase; letter-spacing:0.04em;">Expires</div>
+                  <div style="font-size:13px; color:#1E293B; margin-top:2px;">{{ selected.expiryDate }}</div>
+                </div>
+              </div>
+              <div style="font-size:11.5px; color:{{ selected.validityColor }}; margin-top:-4px;">{{ selected.validityText }}</div>
+
+              <div style="padding-top:10px; border-top:1px solid #F1F5F9;">
+                <div style="font-size:10.5px; color:#94A3B8; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Centroid Coordinates</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#1E293B;">{{ selected.coordText }}</div>
+              </div>
+            </div>
+
+            <div onClick="{{ zoomToSelected }}" style="margin-top:18px; text-align:center; background:#1D4E89; color:#fff; font-size:12.5px; font-weight:600; padding:9px; border-radius:7px; cursor:pointer;" style-hover="background:#173D6E;">Zoom to Feature</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showMultiDetail }}">
+          <div style="padding:18px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+              <div style="font-size:14px; font-weight:600; color:#0F2A43;">{{ toolSelectionHeader }}</div>
+              <div onClick="{{ clearTool }}" style="width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#94A3B8; font-size:16px; line-height:1;" style-hover="background:#F1F5F9;">&times;</div>
+            </div>
+            <div style="font-size:11.5px; color:#94A3B8; margin-bottom:14px;">{{ toolSelectionAreaText }}</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <sc-for list="{{ toolSelectionList }}" as="lic" hint-placeholder-count="4">
+                <div onClick="{{ lic.onClick }}" style="border:1px solid #E2E8F0; border-radius:8px; padding:10px; cursor:pointer;" style-hover="border-color:#94A3B8; background:#F8FAFC;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:#1E293B;">{{ lic.number }}</span>
+                    <span style="margin-left:auto; font-size:9.5px; font-weight:600; color:#fff; background:{{ lic.statusColor }}; padding:2px 6px; border-radius:8px;">{{ lic.status }}</span>
+                  </div>
+                  <div style="font-size:11.5px; color:#475569; margin-top:3px;">{{ lic.owner }}</div>
+                  <div style="font-size:10.5px; color:#94A3B8; margin-top:2px;">{{ lic.commodity }} &middot; {{ lic.areaText }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- STATUS BAR -->
+  <div style="height:28px; min-height:28px; display:flex; align-items:center; gap:18px; padding:0 16px; background:#0F2A43; border-top:1px solid #0B2136; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#93A3B8;">
+    <span>{{ statusMouseText }}</span>
+    <span style="color:#3A5673;">|</span>
+    <span>CRS: EPSG:4326</span>
+    <span style="color:#3A5673;">|</span>
+    <span>Scale {{ scaleRatioText }}</span>
+    <span style="color:#3A5673;">|</span>
+    <span>Zoom {{ zoomLevelText }}</span>
+    <span style="color:#3A5673;">|</span>
+    <span>Selected: {{ selectedCountText }}</span>
+    <span style="margin-left:auto; color:#5B7899;">{{ totalLicensesText }}</span>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {},
+  &quot;initialBasemap&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;light&quot;, &quot;options&quot;: [&quot;light&quot;, &quot;topo&quot;, &quot;satellite&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Map&quot; },
+  &quot;licenceFillOpacity&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.82, &quot;min&quot;: 0.4, &quot;max&quot;: 1, &quot;step&quot;: 0.02, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Map&quot; }
+}">
+const STATUS_LIST = ['Active','Pending','Reserved','Suspended','Expired','Cancelled'];
+const STATUS_COLORS = { Active:'#16A34A', Pending:'#D97706', Reserved:'#0891B2', Suspended:'#EA580C', Expired:'#94A3B8', Cancelled:'#DC2626' };
+
+class Component extends DCLogic {
+  svgRef = React.createRef();
+  mapContainerRef = React.createRef();
+
+  state = {
+    leftOpen: true,
+    leftTab: 'layers',
+    visible: { Active:true, Pending:true, Reserved:true, Suspended:true, Expired:false, Cancelled:false },
+    showBoundaries: true,
+    boundaryOpacity: 1,
+    licenceOpacity: this.props.licenceFillOpacity ?? 0.82,
+    basemap: this.props.initialBasemap ?? 'light',
+    view: { x: 0, y: 0, k: 1 },
+    selectedId: null,
+    hoveredId: null,
+    mouseData: null,
+    isPanning: false,
+    panOrigin: null,
+    searchQuery: '',
+    filterCommodity: 'All',
+    filterStatus: 'All',
+    filterProvince: 'All',
+    activeTool: null,
+    toolFrozen: false,
+    toolPoints: [],
+    bufferCenter: null,
+    bufferRadiusKm: 10,
+    toolSelectionIds: [],
+    mapPxW: 800,
+    mapPxH: 600,
+    themeHint: false,
+  };
+
+  componentDidMount() {
+    this._ro = new ResizeObserver((entries) => {
+      const e = entries[0];
+      if (e) this.setState({ mapPxW: e.contentRect.width, mapPxH: e.contentRect.height });
+    });
+    if (this.mapContainerRef.current) this._ro.observe(this.mapContainerRef.current);
+    this._onKey = (e) => { if (e.key === 'Escape') this.clearTool(); };
+    window.addEventListener('keydown', this._onKey);
+  }
+  componentWillUnmount() {
+    if (this._ro) this._ro.disconnect();
+    window.removeEventListener('keydown', this._onKey);
+  }
+
+  getData() { return window.CADASTRE_DATA; }
+
+  // ---------- projection / geometry helpers ----------
+  toRootPoint(clientX, clientY) {
+    const svg = this.svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+    const pt = svg.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return { x: 0, y: 0 };
+    const r = pt.matrixTransform(ctm.inverse());
+    return { x: r.x, y: r.y };
+  }
+  toDataPoint(clientX, clientY) {
+    const root = this.toRootPoint(clientX, clientY);
+    const { x: tx, y: ty, k } = this.state.view;
+    return { x: (root.x - tx) / k, y: (root.y - ty) / k };
+  }
+  unproject(dataX, dataY) {
+    const p = this.getData().projection;
+    const lon = dataX / (p.cosFactor * p.scale) + p.xmin;
+    const lat = p.ymax - dataY / p.scale;
+    return { lon, lat };
+  }
+  formatLonLat(lon, lat) {
+    return `${Math.abs(lat).toFixed(4)}\u00B0${lat >= 0 ? 'N' : 'S'}  ${Math.abs(lon).toFixed(4)}\u00B0${lon >= 0 ? 'E' : 'W'}`;
+  }
+  dataDist(a, b) { return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2); }
+  distanceKm(a, b) { return this.dataDist(a, b) * this.getData().projection.kmPerDataUnit; }
+  polygonAreaKm2(points) {
+    let sum = 0;
+    for (let i = 0; i < points.length; i++) {
+      const p1 = points[i], p2 = points[(i + 1) % points.length];
+      sum += p1.x * p2.y - p2.x * p1.y;
+    }
+    const km = this.getData().projection.kmPerDataUnit;
+    return Math.abs(sum / 2) * km * km;
+  }
+  pointInPoly(pt, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+      const intersect = ((yi > pt.y) !== (yj > pt.y)) && (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  // ---------- pan / zoom ----------
+  onWheel = (e) => {
+    e.preventDefault();
+    const root = this.toRootPoint(e.clientX, e.clientY);
+    const { x: tx, y: ty, k } = this.state.view;
+    const factor = e.deltaY < 0 ? 1.25 : 0.8;
+    const newK = Math.max(0.6, Math.min(k * factor, 40));
+    const dataLocal = { x: (root.x - tx) / k, y: (root.y - ty) / k };
+    const newTx = root.x - dataLocal.x * newK;
+    const newTy = root.y - dataLocal.y * newK;
+    this.setState({ view: { x: newTx, y: newTy, k: newK } });
+  };
+  zoomBy(factor) {
+    const { x: tx, y: ty, k } = this.state.view;
+    const data = this.getData();
+    const leftLocal = (0 - tx) / k, rightLocal = (data.width - tx) / k;
+    const topLocal = (0 - ty) / k, bottomLocal = (data.height - ty) / k;
+    const centerLocal = { x: (leftLocal + rightLocal) / 2, y: (topLocal + bottomLocal) / 2 };
+    const rootX = centerLocal.x * k + tx, rootY = centerLocal.y * k + ty;
+    const newK = Math.max(0.6, Math.min(k * factor, 40));
+    this.setState({ view: { x: rootX - centerLocal.x * newK, y: rootY - centerLocal.y * newK, k: newK } });
+  }
+  zoomIn = () => this.zoomBy(1.4);
+  zoomOut = () => this.zoomBy(1 / 1.4);
+  resetView = () => this.setState({ view: { x: 0, y: 0, k: 1 } });
+  zoomToLicense(id) {
+    const lic = this.getData().licenses.find((l) => l.id === id);
+    if (!lic) return;
+    const data = this.getData();
+    const xs = lic.points.map((p) => p[0]), ys = lic.points.map((p) => p[1]);
+    const bxmin = Math.min(...xs), bxmax = Math.max(...xs), bymin = Math.min(...ys), bymax = Math.max(...ys);
+    const pad = 5;
+    const bw = Math.max((bxmax - bxmin) * pad, data.width / 25);
+    const bh = Math.max((bymax - bymin) * pad, data.height / 25);
+    const cx = (bxmin + bxmax) / 2, cy = (bymin + bymax) / 2;
+    let newK = Math.min(data.width / bw, data.height / bh);
+    newK = Math.max(1, Math.min(newK, 40));
+    this.setState({
+      view: { x: data.width / 2 - cx * newK, y: data.height / 2 - cy * newK, k: newK },
+      selectedId: id, toolSelectionIds: [], leftTab: this.state.leftTab,
+    });
+  }
+
+  // ---------- mouse / pan ----------
+  onMouseDown = (e) => {
+    if (e.button !== 0) return;
+    if (this.state.activeTool) { this.handleToolClick(e); return; }
+    const dataPoint = this.toDataPoint(e.clientX, e.clientY);
+    this.setState({ isPanning: true, panOrigin: dataPoint });
+  };
+  onMouseMove = (e) => {
+    const dataPoint = this.toDataPoint(e.clientX, e.clientY);
+    if (this.state.isPanning && this.state.panOrigin) {
+      const { x: tx, y: ty, k } = this.state.view;
+      const dx = (dataPoint.x - this.state.panOrigin.x) * k;
+      const dy = (dataPoint.y - this.state.panOrigin.y) * k;
+      this.setState({ view: { x: tx + dx, y: ty + dy, k }, mouseData: dataPoint });
+      return;
+    }
+    this.setState({ mouseData: dataPoint });
+  };
+  onMouseUp = () => { if (this.state.isPanning) this.setState({ isPanning: false, panOrigin: null }); };
+  onMouseLeaveSvg = () => this.setState({ isPanning: false, panOrigin: null, mouseData: null });
+
+  onSvgDoubleClick = () => {
+    const tool = this.state.activeTool;
+    if ((tool === 'distance' && this.state.toolPoints.length >= 2) ||
+        (tool === 'area' && this.state.toolPoints.length >= 3)) {
+      this.setState({ toolFrozen: true });
+    } else if (tool === 'selectPolygon' && this.state.toolPoints.length >= 3) {
+      this.finishPolygonSelect();
+    }
+  };
+
+  handleToolClick(e) {
+    if (this.state.toolFrozen) return;
+    const dataPoint = this.toDataPoint(e.clientX, e.clientY);
+    const tool = this.state.activeTool;
+    if (tool === 'distance' || tool === 'area' || tool === 'selectPolygon') {
+      this.setState((s) => ({ toolPoints: [...s.toolPoints, dataPoint] }));
+    } else if (tool === 'buffer') {
+      this.setState({ bufferCenter: dataPoint });
+      this.computeBufferSelection(dataPoint, this.state.bufferRadiusKm);
+    } else if (tool === 'selectRect' || tool === 'selectCircle') {
+      if (this.state.toolPoints.length === 0) this.setState({ toolPoints: [dataPoint] });
+      else this.finishAreaSelect(tool, this.state.toolPoints[0], dataPoint);
+    }
+  }
+  finishAreaSelect(tool, start, end) {
+    const data = this.getData();
+    let matched = [];
+    if (tool === 'selectRect') {
+      const xmin = Math.min(start.x, end.x), xmax = Math.max(start.x, end.x);
+      const ymin = Math.min(start.y, end.y), ymax = Math.max(start.y, end.y);
+      matched = data.licenses.filter((l) => l.centroid[0] >= xmin && l.centroid[0] <= xmax && l.centroid[1] >= ymin && l.centroid[1] <= ymax);
+    } else {
+      const rData = this.dataDist(start, end);
+      matched = data.licenses.filter((l) => this.dataDist({ x: l.centroid[0], y: l.centroid[1] }, start) <= rData);
+    }
+    this.setState({ toolPoints: [start, end], toolSelectionIds: matched.map((l) => l.id), toolFrozen: true, selectedId: null });
+  }
+  finishPolygonSelect() {
+    const data = this.getData();
+    const poly = this.state.toolPoints;
+    const matched = data.licenses.filter((l) => this.pointInPoly({ x: l.centroid[0], y: l.centroid[1] }, poly));
+    this.setState({ toolSelectionIds: matched.map((l) => l.id), toolFrozen: true, selectedId: null });
+  }
+  computeBufferSelection(center, radiusKm) {
+    const data = this.getData();
+    const rData = radiusKm / data.projection.kmPerDataUnit;
+    const matched = data.licenses.filter((l) => this.dataDist({ x: l.centroid[0], y: l.centroid[1] }, center) <= rData);
+    this.setState({ toolSelectionIds: matched.map((l) => l.id), selectedId: null });
+  }
+
+  setActiveTool(tool) {
+    this.setState((s) => ({
+      activeTool: s.activeTool === tool ? null : tool,
+      toolPoints: [], toolSelectionIds: [], bufferCenter: null, toolFrozen: false, selectedId: null,
+    }));
+  }
+  clearTool = () => this.setState({ activeTool: null, toolPoints: [], toolSelectionIds: [], bufferCenter: null, toolFrozen: false });
+  onBufferRadiusChange = (e) => {
+    const v = Number(e.target.value);
+    this.setState({ bufferRadiusKm: v });
+    if (this.state.bufferCenter) this.computeBufferSelection(this.state.bufferCenter, v);
+  };
+
+  selectLicense(id) {
+    if (this.state.activeTool) return;
+    this.setState({ selectedId: id, toolSelectionIds: [] });
+  }
+  closeSelection = () => this.setState({ selectedId: null });
+  zoomToSelected = () => { if (this.state.selectedId) this.zoomToLicense(this.state.selectedId); };
+
+  // ---------- misc UI handlers ----------
+  toggleLeftPanel = () => this.setState((s) => ({ leftOpen: !s.leftOpen }));
+  onSearchChange = (e) => this.setState({ searchQuery: e.target.value });
+  onSearchFocus = () => this.setState({ leftOpen: true, leftTab: 'search' });
+  onBoundaryOpacityChange = (e) => this.setState({ boundaryOpacity: Number(e.target.value) });
+  onLicenceOpacityChange = (e) => this.setState({ licenceOpacity: Number(e.target.value) });
+  toggleBoundaries = () => this.setState((s) => ({ showBoundaries: !s.showBoundaries }));
+  onFilterCommodityChange = (e) => this.setState({ filterCommodity: e.target.value });
+  onFilterStatusChange = (e) => this.setState({ filterStatus: e.target.value });
+  onFilterProvinceChange = (e) => this.setState({ filterProvince: e.target.value });
+  onToggleTheme = () => { this.setState({ themeHint: true }); setTimeout(() => this.setState({ themeHint: false }), 1600); };
+  onPrint = () => window.print();
+  onToggleFullscreen = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  };
+
+  renderVals() {
+    const data = this.getData();
+    const s = this.state;
+
+    const setTab = (tab) => () => this.setState({ leftTab: tab, leftOpen: true });
+    const tabStyle = (active) => `flex:1; text-align:center; padding:12px 0; font-size:12.5px; font-weight:600; cursor:pointer; color:${active ? '#0F2A43' : '#94A3B8'}; border-bottom:2px solid ${active ? '#1D4E89' : 'transparent'};`;
+
+    // ----- status rows / legend -----
+    const statusCounts = {};
+    STATUS_LIST.forEach((st) => { statusCounts[st] = data.licenses.filter((l) => l.status === st).length; });
+    const statusRows = STATUS_LIST.map((st) => ({
+      status: st, color: STATUS_COLORS[st], count: statusCounts[st],
+      checked: !!s.visible[st], onToggle: () => this.setState((prev) => ({ visible: { ...prev.visible, [st]: !prev.visible[st] } })),
+    }));
+    const legendItems = STATUS_LIST.map((st) => ({ status: st, color: STATUS_COLORS[st] }));
+
+    // ----- filtered / visible licenses -----
+    const q = s.searchQuery.trim().toLowerCase();
+    const filtered = data.licenses.filter((l) => {
+      if (!s.visible[l.status]) return false;
+      if (s.filterCommodity !== 'All' && l.commodity !== s.filterCommodity) return false;
+      if (s.filterStatus !== 'All' && l.status !== s.filterStatus) return false;
+      if (s.filterProvince !== 'All' && l.province !== s.filterProvince) return false;
+      if (q && !(l.number.toLowerCase().includes(q) || l.owner.toLowerCase().includes(q) || l.commodity.toLowerCase().includes(q))) return false;
+      return true;
+    });
+
+    const mapLicenses = filtered.map((l) => {
+      const isSel = l.id === s.selectedId;
+      const isHover = l.id === s.hoveredId;
+      const isToolSel = s.toolSelectionIds.includes(l.id);
+      const color = STATUS_COLORS[l.status] || '#64748B';
+      return {
+        id: l.id,
+        pointsAttr: l.points.map((p) => p.join(',')).join(' '),
+        fillColor: color,
+        fillOpacity: (isSel || isToolSel) ? Math.min(1, s.licenceOpacity + 0.15) : s.licenceOpacity,
+        strokeColor: (isSel || isToolSel || isHover) ? '#0F2A43' : color,
+        strokeWidth: (isSel || isToolSel) ? (2.5 / s.view.k) : isHover ? (2 / s.view.k) : (1 / s.view.k),
+        onStopProp: (e) => e.stopPropagation(),
+        onHoverIn: () => this.setState({ hoveredId: l.id }),
+        onHoverOut: () => this.setState({ hoveredId: null }),
+        onSelect: () => this.selectLicense(l.id),
+      };
+    });
+
+    const provinceItems = data.provinces.map((p) => ({ name: p.name, d: p.d, cx: p.centroid[0], cy: p.centroid[1] }));
+
+    // ----- search tab -----
+    const commodityOptions = ['All', ...Array.from(new Set(data.licenses.map((l) => l.commodity))).sort()];
+    const statusOptions = ['All', ...STATUS_LIST];
+    const provinceOptions = ['All', ...Array.from(new Set(data.licenses.map((l) => l.province))).sort()];
+
+    const licRow = (l) => ({
+      number: l.number, owner: l.owner, commodity: l.commodity, province: l.province,
+      status: l.status, statusColor: STATUS_COLORS[l.status],
+      areaText: `${l.areaKm2} km\u00B2`,
+      onClick: () => this.zoomToLicense(l.id),
+    });
+    const searchResults = filtered.slice(0, 200).map(licRow);
+
+    // ----- tools tab -----
+    const toolBtnStyle = (tool) => {
+      const active = s.activeTool === tool;
+      return `text-align:center; padding:9px 4px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; background:${active ? '#1D4E89' : '#F1F5F9'}; color:${active ? '#fff' : '#334155'};`;
+    };
+
+    const previewPoint = (s.activeTool === 'distance' || s.activeTool === 'area' || s.activeTool === 'selectPolygon') && !s.toolFrozen && s.mouseData && !s.isPanning ? s.mouseData : null;
+    const measurePts = previewPoint ? [...s.toolPoints, previewPoint] : s.toolPoints;
+
+    const showMeasureLine = s.activeTool === 'distance' && s.toolPoints.length > 0;
+    const showMeasureArea = s.activeTool === 'area' && s.toolPoints.length > 0;
+    const showPolySelectOverlay = s.activeTool === 'selectPolygon' && s.toolPoints.length > 0;
+    const measureVertices = (showMeasureLine || showMeasureArea || showPolySelectOverlay) ? s.toolPoints.map((p) => ({ x: p.x, y: p.y })) : [];
+
+    let measureResultText = '';
+    if (showMeasureLine) {
+      let total = 0;
+      for (let i = 0; i < measurePts.length - 1; i++) total += this.distanceKm(measurePts[i], measurePts[i + 1]);
+      measureResultText = `Distance: ${total < 1 ? Math.round(total * 1000) + ' m' : total.toFixed(2) + ' km'}`;
+    } else if (showMeasureArea && measurePts.length >= 3) {
+      const area = this.polygonAreaKm2(measurePts);
+      measureResultText = `Area: ${area.toFixed(1)} km\u00B2`;
+    }
+
+    const showRectOverlay = s.activeTool === 'selectRect' && s.toolPoints.length > 0;
+    const rectEnd = showRectOverlay ? (s.toolFrozen ? s.toolPoints[1] : (s.mouseData || s.toolPoints[0])) : null;
+    const rectOverlay = showRectOverlay ? {
+      x: Math.min(s.toolPoints[0].x, rectEnd.x), y: Math.min(s.toolPoints[0].y, rectEnd.y),
+      w: Math.abs(rectEnd.x - s.toolPoints[0].x), h: Math.abs(rectEnd.y - s.toolPoints[0].y),
+    } : null;
+
+    const showCircleOverlay = s.activeTool === 'selectCircle' && s.toolPoints.length > 0;
+    const circleEnd = showCircleOverlay ? (s.toolFrozen ? s.toolPoints[1] : (s.mouseData || s.toolPoints[0])) : null;
+    const circleOverlay = showCircleOverlay ? {
+      x: s.toolPoints[0].x, y: s.toolPoints[0].y, r: this.dataDist(s.toolPoints[0], circleEnd),
+    } : null;
+
+    const showBufferOverlay = s.activeTool === 'buffer' && !!s.bufferCenter;
+    const bufferOverlay = showBufferOverlay ? {
+      x: s.bufferCenter.x, y: s.bufferCenter.y, r: s.bufferRadiusKm / data.projection.kmPerDataUnit,
+    } : null;
+
+    const polySelectPoints = showPolySelectOverlay ? measurePts.map((p) => `${p.x},${p.y}`).join(' ') : '';
+
+    let toolInstruction = 'Select a spatial tool to begin.';
+    if (s.activeTool === 'distance') toolInstruction = s.toolFrozen ? 'Measurement finished. Clear to start a new one.' : (s.toolPoints.length === 0 ? 'Click points on the map to measure distance. Double-click to finish.' : 'Click to add another point, double-click to finish.');
+    else if (s.activeTool === 'area') toolInstruction = s.toolFrozen ? 'Measurement finished. Clear to start a new one.' : (s.toolPoints.length < 3 ? 'Click at least 3 points to outline an area. Double-click to finish.' : 'Double-click to finish the area.');
+    else if (s.activeTool === 'selectRect') toolInstruction = s.toolFrozen ? 'Rectangle selection complete.' : (s.toolPoints.length === 0 ? 'Click to place the first corner.' : 'Click again to complete the rectangle.');
+    else if (s.activeTool === 'selectCircle') toolInstruction = s.toolFrozen ? 'Circle selection complete.' : (s.toolPoints.length === 0 ? 'Click the centre point.' : 'Click again to set the radius.');
+    else if (s.activeTool === 'selectPolygon') toolInstruction = s.toolFrozen ? 'Polygon selection complete.' : (s.toolPoints.length < 3 ? 'Click to add polygon points (min. 3).' : 'Double-click to finish the polygon.');
+    else if (s.activeTool === 'buffer') toolInstruction = `Click the map to place a ${s.bufferRadiusKm} km buffer around a point.`;
+
+    const toolSelectionList = s.toolSelectionIds.map((id) => licRow(data.licenses.find((l) => l.id === id))).filter(Boolean);
+    const toolSelectionTotalArea = s.toolSelectionIds.reduce((sum, id) => { const l = data.licenses.find((x) => x.id === id); return sum + (l ? l.areaKm2 : 0); }, 0);
+
+    // ----- right panel selected -----
+    let selected = null;
+    if (s.selectedId) {
+      const l = data.licenses.find((x) => x.id === s.selectedId);
+      if (l) {
+        const ll = this.unproject(l.centroid[0], l.centroid[1]);
+        const today = new Date();
+        const expiry = new Date(l.expiryDate);
+        const yrsLeft = (expiry - today) / (365.25 * 24 * 3600 * 1000);
+        selected = {
+          number: l.number, licenceType: l.licenceType, status: l.status, statusColor: STATUS_COLORS[l.status],
+          owner: l.owner, commodity: l.commodity, areaText: `${l.areaKm2} km\u00B2`, province: l.province,
+          issueDate: l.issueDate, expiryDate: l.expiryDate,
+          validityText: yrsLeft > 0 ? `Valid \u2014 ${yrsLeft.toFixed(1)} yrs remaining` : `Expired ${Math.abs(yrsLeft).toFixed(1)} yrs ago`,
+          validityColor: yrsLeft > 0 ? '#16A34A' : '#DC2626',
+          coordText: this.formatLonLat(ll.lon, ll.lat),
+        };
+      }
+    }
+
+    // ----- scale bar -----
+    const viewBoxScale = Math.min(s.mapPxW / data.width, s.mapPxH / data.height) || 1;
+    const pxPerDataUnit = viewBoxScale * s.view.k;
+    const kmPerScreenPx = data.projection.kmPerDataUnit / pxPerDataUnit;
+    const niceKm = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000];
+    let chosenKm = niceKm[0];
+    for (const n of niceKm) { if (n / kmPerScreenPx <= 130) chosenKm = n; }
+    const scaleBarWidthPx = Math.round(chosenKm / kmPerScreenPx);
+    const scaleBarLabel = chosenKm < 1 ? `${chosenKm * 1000} m` : `${chosenKm} km`;
+
+    // cartographic 1:N scale (assumes ~96dpi)
+    const cmPerPxPhysical = 2.54 / 96;
+    const groundCmPerPx = kmPerScreenPx * 100000;
+    const scaleRatio = Math.round(groundCmPerPx / cmPerPxPhysical);
+    const scaleRatioText = `1 : ${scaleRatio.toLocaleString('en-US')}`;
+
+    // ----- overview inset rect -----
+    const { x: tx, y: ty, k } = s.view;
+    const vx = Math.max(0, -tx / k), vy = Math.max(0, -ty / k);
+    const vx2 = Math.min(data.width, (data.width - tx) / k), vy2 = Math.min(data.height, (data.height - ty) / k);
+    const overviewRect = { x: vx, y: vy, w: Math.max(2, vx2 - vx), h: Math.max(2, vy2 - vy) };
+
+    // ----- mouse readouts -----
+    let mouseLonLatText = 'Move over map for coordinates';
+    let statusMouseText = 'Lon/Lat: \u2014';
+    if (s.mouseData) {
+      const ll = this.unproject(s.mouseData.x, s.mouseData.y);
+      const t = this.formatLonLat(ll.lon, ll.lat);
+      mouseLonLatText = t;
+      statusMouseText = t;
+    }
+
+    const selectedCount = s.toolSelectionIds.length > 0 ? s.toolSelectionIds.length : (s.selectedId ? 1 : 0);
+
+    return {
+      leftOpen: s.leftOpen, leftClosed: !s.leftOpen,
+      toggleLeftPanel: this.toggleLeftPanel,
+      openLayers: () => this.setState({ leftOpen: true, leftTab: 'layers' }),
+      openSearch: () => this.setState({ leftOpen: true, leftTab: 'search' }),
+      openTools: () => this.setState({ leftOpen: true, leftTab: 'tools' }),
+
+      isTabLayers: s.leftTab === 'layers', isTabSearch: s.leftTab === 'search', isTabTools: s.leftTab === 'tools',
+      setTabLayers: setTab('layers'), setTabSearch: setTab('search'), setTabTools: setTab('tools'),
+      tabStyleLayers: tabStyle(s.leftTab === 'layers'), tabStyleSearch: tabStyle(s.leftTab === 'search'), tabStyleTools: tabStyle(s.leftTab === 'tools'),
+
+      searchQuery: s.searchQuery, onSearchChange: this.onSearchChange, onSearchFocus: this.onSearchFocus,
+      mouseLonLatText, statusMouseText,
+      onToggleTheme: this.onToggleTheme, themeHint: s.themeHint,
+      onPrint: this.onPrint, onToggleFullscreen: this.onToggleFullscreen,
+
+      basemapSwatchLight: `cursor:pointer; flex:1; ${s.basemap === 'light' ? 'outline:2px solid #1D4E89; border-radius:6px; padding:2px;' : 'padding:2px;'}`,
+      basemapSwatchTopo: `cursor:pointer; flex:1; ${s.basemap === 'topo' ? 'outline:2px solid #1D4E89; border-radius:6px; padding:2px;' : 'padding:2px;'}`,
+      basemapSwatchSatellite: `cursor:pointer; flex:1; ${s.basemap === 'satellite' ? 'outline:2px solid #1D4E89; border-radius:6px; padding:2px;' : 'padding:2px;'}`,
+      setBasemapLight: () => this.setState({ basemap: 'light' }),
+      setBasemapTopo: () => this.setState({ basemap: 'topo' }),
+      setBasemapSatellite: () => this.setState({ basemap: 'satellite' }),
+      basemapFill: s.basemap === 'light' ? '#EAEFF5' : s.basemap === 'topo' ? '#E7ECE0' : '#16201B',
+      isSatellite: s.basemap === 'satellite',
+
+      showBoundaries: s.showBoundaries, toggleBoundaries: this.toggleBoundaries,
+      boundaryOpacity: s.boundaryOpacity, onBoundaryOpacityChange: this.onBoundaryOpacityChange,
+      boundaryFillOpacity: s.boundaryOpacity * 0.55, boundaryStrokeWidth: 1 / s.view.k,
+      labelFontSize: Math.max(7, Math.min(15, 11 / s.view.k)),
+
+      licenceOpacity: s.licenceOpacity, onLicenceOpacityChange: this.onLicenceOpacityChange,
+      statusRows, legendItems,
+
+      commodityOptions, statusOptions, provinceOptions,
+      filterCommodity: s.filterCommodity, filterStatus: s.filterStatus, filterProvince: s.filterProvince,
+      onFilterCommodityChange: this.onFilterCommodityChange, onFilterStatusChange: this.onFilterStatusChange, onFilterProvinceChange: this.onFilterProvinceChange,
+      searchResults, resultCountText: `${filtered.length}`, noResults: filtered.length === 0,
+
+      toolBtnDistance: toolBtnStyle('distance'), toolBtnArea: toolBtnStyle('area'),
+      toolBtnRect: toolBtnStyle('selectRect'), toolBtnCircle: toolBtnStyle('selectCircle'), toolBtnPolygon: toolBtnStyle('selectPolygon'),
+      toolBtnBuffer: toolBtnStyle('buffer'),
+      selectToolDistance: () => this.setActiveTool('distance'), selectToolArea: () => this.setActiveTool('area'),
+      selectToolRect: () => this.setActiveTool('selectRect'), selectToolCircle: () => this.setActiveTool('selectCircle'),
+      selectToolPolygon: () => this.setActiveTool('selectPolygon'), selectToolBuffer: () => this.setActiveTool('buffer'),
+      isToolBuffer: s.activeTool === 'buffer', bufferRadiusKm: s.bufferRadiusKm, bufferRadiusText: `${s.bufferRadiusKm} km`,
+      onBufferRadiusChange: this.onBufferRadiusChange,
+      toolInstruction, clearTool: this.clearTool,
+      hasToolSelection: s.toolSelectionIds.length > 0,
+      toolSelectionHeader: `${s.toolSelectionIds.length} Licence${s.toolSelectionIds.length === 1 ? '' : 's'} Selected`,
+      toolSelectionAreaText: `Total area: ${toolSelectionTotalArea.toFixed(1)} km\u00B2`,
+      toolSelectionList,
+
+      mapContainerRef: this.mapContainerRef, svgRef: this.svgRef,
+      viewBoxAttr: `0 0 ${data.width} ${data.height}`, mapWidth: data.width, mapHeight: data.height,
+      transformStr: `translate(${s.view.x} ${s.view.y}) scale(${s.view.k})`,
+      mapCursor: s.activeTool ? 'crosshair' : (s.isPanning ? 'grabbing' : 'grab'),
+      onWheel: this.onWheel, onMouseDown: this.onMouseDown, onMouseMove: this.onMouseMove, onMouseUp: this.onMouseUp,
+      onMouseLeaveSvg: this.onMouseLeaveSvg, onSvgDoubleClick: this.onSvgDoubleClick,
+      provinceItems, mapLicenses,
+
+      showMeasureLine, showMeasureArea, measureLinePoints: showMeasureLine ? measurePts.map((p) => `${p.x},${p.y}`).join(' ') : '',
+      measureAreaPoints: showMeasureArea ? measurePts.map((p) => `${p.x},${p.y}`).join(' ') : '',
+      measureVertices, measureResultText,
+      showRectOverlay, rectOverlay: rectOverlay || { x: 0, y: 0, w: 0, h: 0 },
+      showCircleOverlay, circleOverlay: circleOverlay || { x: 0, y: 0, r: 0 },
+      showPolySelectOverlay, polySelectPoints,
+      showBufferOverlay, bufferOverlay: bufferOverlay || { x: 0, y: 0, r: 0 },
+      overlayStroke: 1.5 / s.view.k, overlayDash: `${4 / s.view.k} ${3 / s.view.k}`, overlayDot: 3 / s.view.k,
+
+      zoomIn: this.zoomIn, zoomOut: this.zoomOut, resetView: this.resetView,
+      scaleBarWidthPx, scaleBarLabel, overviewRect,
+
+      showRightPanel: !!s.selectedId || s.toolSelectionIds.length > 0,
+      showSingleDetail: !!s.selectedId && s.toolSelectionIds.length === 0,
+      showMultiDetail: s.toolSelectionIds.length > 0,
+      selected, closeSelection: this.closeSelection, zoomToSelected: this.zoomToSelected,
+
+      scaleRatioText, zoomLevelText: `\u00D7${s.view.k.toFixed(1)}`,
+      selectedCountText: `${selectedCount}`,
+      totalLicensesText: `${data.licenses.length} licences \u00B7 Zambia`,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

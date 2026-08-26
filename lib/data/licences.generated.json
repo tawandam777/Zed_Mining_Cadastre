@@ -1,0 +1,2413 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "LSM-2024-0147",
+      "properties": {
+        "id": "LSM-2024-0147",
+        "licenceNumber": "LSM-2024-0147",
+        "owner": "Kabwe Copper Resources Ltd",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 2450,
+        "issueDate": "2024-03-12",
+        "expiryDate": "2049-03-11"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.68337069031949,
+              -12.949638016232795
+            ],
+            [
+              24.729101323287264,
+              -12.949638016232795
+            ],
+            [
+              24.729101323287264,
+              -12.905045696698508
+            ],
+            [
+              24.68337069031949,
+              -12.905045696698508
+            ],
+            [
+              24.68337069031949,
+              -12.949638016232795
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2024-0231",
+      "properties": {
+        "id": "EPL-2024-0231",
+        "licenceNumber": "EPL-2024-0231",
+        "owner": "Mkushi Exploration Co.",
+        "commodity": "Gold",
+        "licenceType": "Exploration",
+        "status": "Pending",
+        "province": "North-Western",
+        "areaHa": 5600,
+        "issueDate": "2024-09-22",
+        "expiryDate": "2028-09-21"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.72990132328726,
+              -12.949638016232795
+            ],
+            [
+              24.79903954164744,
+              -12.949638016232795
+            ],
+            [
+              24.79903954164744,
+              -12.882220766020652
+            ],
+            [
+              24.72990132328726,
+              -12.882220766020652
+            ],
+            [
+              24.72990132328726,
+              -12.949638016232795
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2021-0067",
+      "properties": {
+        "id": "LSM-2021-0067",
+        "licenceNumber": "LSM-2021-0067",
+        "owner": "Zambezi Metals Plc",
+        "commodity": "Lead/Zinc",
+        "licenceType": "Large-Scale Mining",
+        "status": "Expired",
+        "province": "North-Western",
+        "areaHa": 3100,
+        "issueDate": "2011-02-09",
+        "expiryDate": "2025-02-08"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.799839541647437,
+              -12.949638016232795
+            ],
+            [
+              24.851280022229123,
+              -12.949638016232795
+            ],
+            [
+              24.851280022229123,
+              -12.89947797692802
+            ],
+            [
+              24.799839541647437,
+              -12.89947797692802
+            ],
+            [
+              24.799839541647437,
+              -12.949638016232795
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2023-0556",
+      "properties": {
+        "id": "EPL-2023-0556",
+        "licenceNumber": "EPL-2023-0556",
+        "owner": "Kapiri Resources Ltd",
+        "commodity": "Manganese",
+        "licenceType": "Exploration",
+        "status": "Suspended",
+        "province": "North-Western",
+        "areaHa": 4200,
+        "issueDate": "2023-11-14",
+        "expiryDate": "2027-11-13"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.852080022229124,
+              -12.949638016232795
+            ],
+            [
+              24.91195547570143,
+              -12.949638016232795
+            ],
+            [
+              24.91195547570143,
+              -12.891252964895788
+            ],
+            [
+              24.852080022229124,
+              -12.891252964895788
+            ],
+            [
+              24.852080022229124,
+              -12.949638016232795
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2022-0611",
+      "properties": {
+        "id": "SSM-2022-0611",
+        "licenceNumber": "SSM-2022-0611",
+        "owner": "Chibombo Minerals Ltd",
+        "commodity": "Manganese",
+        "licenceType": "Small-Scale Mining",
+        "status": "Expired",
+        "province": "North-Western",
+        "areaHa": 290,
+        "issueDate": "2012-10-03",
+        "expiryDate": "2024-10-02"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.912755475701427,
+              -12.949638016232795
+            ],
+            [
+              24.931233441803982,
+              -12.949638016232795
+            ],
+            [
+              24.931233441803982,
+              -12.931619998214776
+            ],
+            [
+              24.912755475701427,
+              -12.931619998214776
+            ],
+            [
+              24.912755475701427,
+              -12.949638016232795
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "MPL-2023-0089",
+      "properties": {
+        "id": "MPL-2023-0089",
+        "licenceNumber": "MPL-2023-0089",
+        "owner": "Lukanga Minerals",
+        "commodity": "Cobalt",
+        "licenceType": "Mineral Processing",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 130,
+        "issueDate": "2023-02-21",
+        "expiryDate": "2033-02-20"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.68337069031949,
+              -12.881420766020652
+            ],
+            [
+              24.70184865642204,
+              -12.881420766020652
+            ],
+            [
+              24.70184865642204,
+              -12.863402748002633
+            ],
+            [
+              24.68337069031949,
+              -12.863402748002633
+            ],
+            [
+              24.68337069031949,
+              -12.881420766020652
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2014-0501",
+      "properties": {
+        "id": "LSM-2014-0501",
+        "licenceNumber": "LSM-2014-0501",
+        "owner": "Kalahari Resources Ltd",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 3400,
+        "issueDate": "2014-09-15",
+        "expiryDate": "2039-09-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.702648656422042,
+              -12.881420766020652
+            ],
+            [
+              24.756520722151322,
+              -12.881420766020652
+            ],
+            [
+              24.756520722151322,
+              -12.828889667868893
+            ],
+            [
+              24.702648656422042,
+              -12.828889667868893
+            ],
+            [
+              24.702648656422042,
+              -12.881420766020652
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2013-0506",
+      "properties": {
+        "id": "LSM-2013-0506",
+        "licenceNumber": "LSM-2013-0506",
+        "owner": "Kabwe Copper Resources Ltd",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 4100,
+        "issueDate": "2013-02-15",
+        "expiryDate": "2038-02-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.757320722151324,
+              -12.881420766020652
+            ],
+            [
+              24.81647907845618,
+              -12.881420766020652
+            ],
+            [
+              24.81647907845618,
+              -12.823734962079815
+            ],
+            [
+              24.757320722151324,
+              -12.823734962079815
+            ],
+            [
+              24.757320722151324,
+              -12.881420766020652
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ASM-2023-0508",
+      "properties": {
+        "id": "ASM-2023-0508",
+        "licenceNumber": "ASM-2023-0508",
+        "owner": "Mulungushi Gems",
+        "commodity": "Emerald",
+        "licenceType": "Artisanal",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 60,
+        "issueDate": "2023-04-15",
+        "expiryDate": "2028-04-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.81727907845618,
+              -12.881420766020652
+            ],
+            [
+              24.835757044558733,
+              -12.881420766020652
+            ],
+            [
+              24.835757044558733,
+              -12.863402748002633
+            ],
+            [
+              24.81727907845618,
+              -12.863402748002633
+            ],
+            [
+              24.81727907845618,
+              -12.881420766020652
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2024-0510",
+      "properties": {
+        "id": "EPL-2024-0510",
+        "licenceNumber": "EPL-2024-0510",
+        "owner": "Luapula Copper Ventures",
+        "commodity": "Copper",
+        "licenceType": "Exploration",
+        "status": "Pending",
+        "province": "North-Western",
+        "areaHa": 4800,
+        "issueDate": "2024-06-15",
+        "expiryDate": "2028-06-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.836557044558734,
+              -12.881420766020652
+            ],
+            [
+              24.900566596779047,
+              -12.881420766020652
+            ],
+            [
+              24.900566596779047,
+              -12.819004520702855
+            ],
+            [
+              24.836557044558734,
+              -12.819004520702855
+            ],
+            [
+              24.836557044558734,
+              -12.881420766020652
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2023-0512",
+      "properties": {
+        "id": "EPL-2023-0512",
+        "licenceNumber": "EPL-2023-0512",
+        "owner": "Great North Exploration",
+        "commodity": "Cobalt",
+        "licenceType": "Exploration",
+        "status": "Reserved",
+        "province": "North-Western",
+        "areaHa": 5300,
+        "issueDate": "2023-08-15",
+        "expiryDate": "2027-08-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.68337069031949,
+              -12.818204520702855
+            ],
+            [
+              24.75063150219798,
+              -12.818204520702855
+            ],
+            [
+              24.75063150219798,
+              -12.75261794512375
+            ],
+            [
+              24.68337069031949,
+              -12.75261794512375
+            ],
+            [
+              24.68337069031949,
+              -12.818204520702855
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2022-0517",
+      "properties": {
+        "id": "EPL-2022-0517",
+        "licenceNumber": "EPL-2022-0517",
+        "owner": "Muchinga Metals Ltd",
+        "commodity": "Gold",
+        "licenceType": "Exploration",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 6400,
+        "issueDate": "2022-01-15",
+        "expiryDate": "2026-01-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.751431502197978,
+              -12.818204520702855
+            ],
+            [
+              24.825343366608188,
+              -12.818204520702855
+            ],
+            [
+              24.825343366608188,
+              -12.746132448630782
+            ],
+            [
+              24.751431502197978,
+              -12.746132448630782
+            ],
+            [
+              24.751431502197978,
+              -12.818204520702855
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2021-0519",
+      "properties": {
+        "id": "SSM-2021-0519",
+        "licenceNumber": "SSM-2021-0519",
+        "owner": "Serenje Prospecting Co.",
+        "commodity": "Manganese",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 360,
+        "issueDate": "2021-03-15",
+        "expiryDate": "2031-03-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.82614336660819,
+              -12.818204520702855
+            ],
+            [
+              24.84462133271074,
+              -12.818204520702855
+            ],
+            [
+              24.84462133271074,
+              -12.800186502684836
+            ],
+            [
+              24.82614336660819,
+              -12.800186502684836
+            ],
+            [
+              24.82614336660819,
+              -12.818204520702855
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2015-0521",
+      "properties": {
+        "id": "LSM-2015-0521",
+        "licenceNumber": "LSM-2015-0521",
+        "owner": "Zambezi Metals Plc",
+        "commodity": "Lead/Zinc",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 3300,
+        "issueDate": "2015-05-15",
+        "expiryDate": "2040-05-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.845421332710742,
+              -12.818204520702855
+            ],
+            [
+              24.8984952496391,
+              -12.818204520702855
+            ],
+            [
+              24.8984952496391,
+              -12.766451704067377
+            ],
+            [
+              24.845421332710742,
+              -12.766451704067377
+            ],
+            [
+              24.845421332710742,
+              -12.818204520702855
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2023-0526",
+      "properties": {
+        "id": "LSM-2023-0526",
+        "licenceNumber": "LSM-2023-0526",
+        "owner": "Eastern Reef Gold Ltd",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Reserved",
+        "province": "North-Western",
+        "areaHa": 2800,
+        "issueDate": "2023-10-15",
+        "expiryDate": "2048-10-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.8992952496391,
+              -12.818204520702855
+            ],
+            [
+              24.948183352680736,
+              -12.818204520702855
+            ],
+            [
+              24.948183352680736,
+              -12.770533325908898
+            ],
+            [
+              24.8992952496391,
+              -12.770533325908898
+            ],
+            [
+              24.8992952496391,
+              -12.818204520702855
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ASM-2024-0528",
+      "properties": {
+        "id": "ASM-2024-0528",
+        "licenceNumber": "ASM-2024-0528",
+        "owner": "Eastern Reef Gold Ltd",
+        "commodity": "Gold",
+        "licenceType": "Artisanal",
+        "status": "Pending",
+        "province": "North-Western",
+        "areaHa": 60,
+        "issueDate": "2024-12-15",
+        "expiryDate": "2029-12-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.68337069031949,
+              -12.745332448630782
+            ],
+            [
+              24.70184865642204,
+              -12.745332448630782
+            ],
+            [
+              24.70184865642204,
+              -12.727314430612765
+            ],
+            [
+              24.68337069031949,
+              -12.727314430612765
+            ],
+            [
+              24.68337069031949,
+              -12.745332448630782
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2022-0530",
+      "properties": {
+        "id": "SSM-2022-0530",
+        "licenceNumber": "SSM-2022-0530",
+        "owner": "Chibombo Minerals Ltd",
+        "commodity": "Manganese",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 330,
+        "issueDate": "2022-02-15",
+        "expiryDate": "2032-02-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.702648656422042,
+              -12.745332448630782
+            ],
+            [
+              24.721126622524594,
+              -12.745332448630782
+            ],
+            [
+              24.721126622524594,
+              -12.727314430612765
+            ],
+            [
+              24.702648656422042,
+              -12.727314430612765
+            ],
+            [
+              24.702648656422042,
+              -12.745332448630782
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2015-0532",
+      "properties": {
+        "id": "LSM-2015-0532",
+        "licenceNumber": "LSM-2015-0532",
+        "owner": "Southern Cross Manganese",
+        "commodity": "Manganese",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "North-Western",
+        "areaHa": 3600,
+        "issueDate": "2015-04-15",
+        "expiryDate": "2040-04-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.72192662252459,
+              -12.745332448630782
+            ],
+            [
+              24.77736052083225,
+              -12.745332448630782
+            ],
+            [
+              24.77736052083225,
+              -12.69127839457673
+            ],
+            [
+              24.72192662252459,
+              -12.69127839457673
+            ],
+            [
+              24.72192662252459,
+              -12.745332448630782
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2023-0537",
+      "properties": {
+        "id": "EPL-2023-0537",
+        "licenceNumber": "EPL-2023-0537",
+        "owner": "Barotse Mining Company",
+        "commodity": "Copper",
+        "licenceType": "Exploration",
+        "status": "Reserved",
+        "province": "North-Western",
+        "areaHa": 6700,
+        "issueDate": "2023-09-15",
+        "expiryDate": "2027-09-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.77816052083225,
+              -12.745332448630782
+            ],
+            [
+              24.853784856360296,
+              -12.745332448630782
+            ],
+            [
+              24.853784856360296,
+              -12.671590531767066
+            ],
+            [
+              24.77816052083225,
+              -12.671590531767066
+            ],
+            [
+              24.77816052083225,
+              -12.745332448630782
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2024-0539",
+      "properties": {
+        "id": "EPL-2024-0539",
+        "licenceNumber": "EPL-2024-0539",
+        "owner": "Barotse Mining Company",
+        "commodity": "Manganese",
+        "licenceType": "Exploration",
+        "status": "Pending",
+        "province": "North-Western",
+        "areaHa": 5400,
+        "issueDate": "2024-11-15",
+        "expiryDate": "2028-11-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.854584856360297,
+              -12.745332448630782
+            ],
+            [
+              24.92247723901384,
+              -12.745332448630782
+            ],
+            [
+              24.92247723901384,
+              -12.679130023150156
+            ],
+            [
+              24.854584856360297,
+              -12.679130023150156
+            ],
+            [
+              24.854584856360297,
+              -12.745332448630782
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2012-0541",
+      "properties": {
+        "id": "SSM-2012-0541",
+        "licenceNumber": "SSM-2012-0541",
+        "owner": "Bangweulu Resources",
+        "commodity": "Lead/Zinc",
+        "licenceType": "Small-Scale Mining",
+        "status": "Expired",
+        "province": "North-Western",
+        "areaHa": 310,
+        "issueDate": "2012-01-15",
+        "expiryDate": "2024-01-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              24.923277239013842,
+              -12.745332448630782
+            ],
+            [
+              24.941755205116394,
+              -12.745332448630782
+            ],
+            [
+              24.941755205116394,
+              -12.727314430612765
+            ],
+            [
+              24.923277239013842,
+              -12.727314430612765
+            ],
+            [
+              24.923277239013842,
+              -12.745332448630782
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2023-0892",
+      "properties": {
+        "id": "SSM-2023-0892",
+        "licenceNumber": "SSM-2023-0892",
+        "owner": "Lukanga Minerals",
+        "commodity": "Cobalt",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 320,
+        "issueDate": "2023-07-04",
+        "expiryDate": "2033-07-03"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.82537828959013,
+              -13.210496801929377
+            ],
+            [
+              27.843876163950384,
+              -13.210496801929377
+            ],
+            [
+              27.843876163950384,
+              -13.192478783911358
+            ],
+            [
+              27.82537828959013,
+              -13.192478783911358
+            ],
+            [
+              27.82537828959013,
+              -13.210496801929377
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ASM-2022-1045",
+      "properties": {
+        "id": "ASM-2022-1045",
+        "licenceNumber": "ASM-2022-1045",
+        "owner": "Broken Hill Artisanal Coop",
+        "commodity": "Emerald",
+        "licenceType": "Artisanal",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 50,
+        "issueDate": "2022-05-18",
+        "expiryDate": "2027-05-17"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.844676163950385,
+              -13.210496801929377
+            ],
+            [
+              27.86317403831064,
+              -13.210496801929377
+            ],
+            [
+              27.86317403831064,
+              -13.192478783911358
+            ],
+            [
+              27.844676163950385,
+              -13.192478783911358
+            ],
+            [
+              27.844676163950385,
+              -13.210496801929377
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "MPL-2024-0012",
+      "properties": {
+        "id": "MPL-2024-0012",
+        "licenceNumber": "MPL-2024-0012",
+        "owner": "Central Processing Ltd",
+        "commodity": "Copper",
+        "licenceType": "Mineral Processing",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 180,
+        "issueDate": "2024-01-30",
+        "expiryDate": "2034-01-29"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.863974038310637,
+              -13.210496801929377
+            ],
+            [
+              27.88247191267089,
+              -13.210496801929377
+            ],
+            [
+              27.88247191267089,
+              -13.192478783911358
+            ],
+            [
+              27.863974038310637,
+              -13.192478783911358
+            ],
+            [
+              27.863974038310637,
+              -13.210496801929377
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2024-0445",
+      "properties": {
+        "id": "EPL-2024-0445",
+        "licenceNumber": "EPL-2024-0445",
+        "owner": "Great North Exploration",
+        "commodity": "Cobalt",
+        "licenceType": "Exploration",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 6100,
+        "issueDate": "2024-06-15",
+        "expiryDate": "2028-06-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.883271912670892,
+              -13.210496801929377
+            ],
+            [
+              27.95550842128446,
+              -13.210496801929377
+            ],
+            [
+              27.95550842128446,
+              -13.140134192236525
+            ],
+            [
+              27.883271912670892,
+              -13.140134192236525
+            ],
+            [
+              27.883271912670892,
+              -13.210496801929377
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2023-0198",
+      "properties": {
+        "id": "LSM-2023-0198",
+        "licenceNumber": "LSM-2023-0198",
+        "owner": "Kabwe Copper Resources Ltd",
+        "commodity": "Lead/Zinc",
+        "licenceType": "Large-Scale Mining",
+        "status": "Pending",
+        "province": "Copperbelt",
+        "areaHa": 1950,
+        "issueDate": "2023-08-19",
+        "expiryDate": "2048-08-18"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.956308421284458,
+              -13.210496801929377
+            ],
+            [
+              27.997150622005744,
+              -13.210496801929377
+            ],
+            [
+              27.997150622005744,
+              -13.170714095324296
+            ],
+            [
+              27.956308421284458,
+              -13.170714095324296
+            ],
+            [
+              27.956308421284458,
+              -13.210496801929377
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2021-0302",
+      "properties": {
+        "id": "EPL-2021-0302",
+        "licenceNumber": "EPL-2021-0302",
+        "owner": "Mkushi Exploration Co.",
+        "commodity": "Gold",
+        "licenceType": "Exploration",
+        "status": "Suspended",
+        "province": "Copperbelt",
+        "areaHa": 3750,
+        "issueDate": "2021-09-08",
+        "expiryDate": "2025-09-07"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.82537828959013,
+              -13.139334192236525
+            ],
+            [
+              27.882016231476047,
+              -13.139334192236525
+            ],
+            [
+              27.882016231476047,
+              -13.084165504336003
+            ],
+            [
+              27.82537828959013,
+              -13.084165504336003
+            ],
+            [
+              27.82537828959013,
+              -13.139334192236525
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2022-0502",
+      "properties": {
+        "id": "EPL-2022-0502",
+        "licenceNumber": "EPL-2022-0502",
+        "owner": "Great North Exploration",
+        "commodity": "Cobalt",
+        "licenceType": "Exploration",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 5200,
+        "issueDate": "2022-10-15",
+        "expiryDate": "2026-10-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.882816231476045,
+              -13.139334192236525
+            ],
+            [
+              27.949511265969033,
+              -13.139334192236525
+            ],
+            [
+              27.949511265969033,
+              -13.074369304390327
+            ],
+            [
+              27.882816231476045,
+              -13.074369304390327
+            ],
+            [
+              27.882816231476045,
+              -13.139334192236525
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2019-0507",
+      "properties": {
+        "id": "SSM-2019-0507",
+        "licenceNumber": "SSM-2019-0507",
+        "owner": "Lukanga Minerals",
+        "commodity": "Cobalt",
+        "licenceType": "Small-Scale Mining",
+        "status": "Suspended",
+        "province": "Copperbelt",
+        "areaHa": 380,
+        "issueDate": "2019-03-15",
+        "expiryDate": "2029-03-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.950311265969034,
+              -13.139334192236525
+            ],
+            [
+              27.968809140329288,
+              -13.139334192236525
+            ],
+            [
+              27.968809140329288,
+              -13.121316174218506
+            ],
+            [
+              27.950311265969034,
+              -13.121316174218506
+            ],
+            [
+              27.950311265969034,
+              -13.139334192236525
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2021-0509",
+      "properties": {
+        "id": "SSM-2021-0509",
+        "licenceNumber": "SSM-2021-0509",
+        "owner": "Luapula Copper Ventures",
+        "commodity": "Manganese",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 340,
+        "issueDate": "2021-05-15",
+        "expiryDate": "2031-05-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.969609140329286,
+              -13.139334192236525
+            ],
+            [
+              27.98810701468954,
+              -13.139334192236525
+            ],
+            [
+              27.98810701468954,
+              -13.121316174218506
+            ],
+            [
+              27.969609140329286,
+              -13.121316174218506
+            ],
+            [
+              27.969609140329286,
+              -13.139334192236525
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ASM-2022-0511",
+      "properties": {
+        "id": "ASM-2022-0511",
+        "licenceNumber": "ASM-2022-0511",
+        "owner": "Mulungushi Gems",
+        "commodity": "Gold",
+        "licenceType": "Artisanal",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 70,
+        "issueDate": "2022-07-15",
+        "expiryDate": "2027-07-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.98890701468954,
+              -13.139334192236525
+            ],
+            [
+              28.007404889049795,
+              -13.139334192236525
+            ],
+            [
+              28.007404889049795,
+              -13.121316174218506
+            ],
+            [
+              27.98890701468954,
+              -13.121316174218506
+            ],
+            [
+              27.98890701468954,
+              -13.139334192236525
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2012-0516",
+      "properties": {
+        "id": "SSM-2012-0516",
+        "licenceNumber": "SSM-2012-0516",
+        "owner": "Chibombo Minerals Ltd",
+        "commodity": "Lead/Zinc",
+        "licenceType": "Small-Scale Mining",
+        "status": "Expired",
+        "province": "Copperbelt",
+        "areaHa": 300,
+        "issueDate": "2012-12-15",
+        "expiryDate": "2024-12-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.008204889049793,
+              -13.139334192236525
+            ],
+            [
+              28.026702763410047,
+              -13.139334192236525
+            ],
+            [
+              28.026702763410047,
+              -13.121316174218506
+            ],
+            [
+              28.008204889049793,
+              -13.121316174218506
+            ],
+            [
+              28.008204889049793,
+              -13.139334192236525
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2023-0518",
+      "properties": {
+        "id": "LSM-2023-0518",
+        "licenceNumber": "LSM-2023-0518",
+        "owner": "Chambeshi Mining Ltd",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Reserved",
+        "province": "Copperbelt",
+        "areaHa": 3100,
+        "issueDate": "2023-02-15",
+        "expiryDate": "2048-02-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.82537828959013,
+              -13.073569304390327
+            ],
+            [
+              27.876874192415695,
+              -13.073569304390327
+            ],
+            [
+              27.876874192415695,
+              -13.02340926508555
+            ],
+            [
+              27.82537828959013,
+              -13.02340926508555
+            ],
+            [
+              27.82537828959013,
+              -13.073569304390327
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2022-0520",
+      "properties": {
+        "id": "EPL-2022-0520",
+        "licenceNumber": "EPL-2022-0520",
+        "owner": "Mkushi Exploration Co.",
+        "commodity": "Gold",
+        "licenceType": "Exploration",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 5500,
+        "issueDate": "2022-04-15",
+        "expiryDate": "2026-04-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.877674192415693,
+              -13.073569304390327
+            ],
+            [
+              27.946266146338193,
+              -13.073569304390327
+            ],
+            [
+              27.946266146338193,
+              -13.006756705407483
+            ],
+            [
+              27.877674192415693,
+              -13.006756705407483
+            ],
+            [
+              27.877674192415693,
+              -13.073569304390327
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2024-0522",
+      "properties": {
+        "id": "SSM-2024-0522",
+        "licenceNumber": "SSM-2024-0522",
+        "owner": "Serenje Prospecting Co.",
+        "commodity": "Copper",
+        "licenceType": "Small-Scale Mining",
+        "status": "Pending",
+        "province": "Copperbelt",
+        "areaHa": 420,
+        "issueDate": "2024-06-15",
+        "expiryDate": "2034-06-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.947066146338194,
+              -13.073569304390327
+            ],
+            [
+              27.966020827122637,
+              -13.073569304390327
+            ],
+            [
+              27.966020827122637,
+              -13.055106330037246
+            ],
+            [
+              27.947066146338194,
+              -13.055106330037246
+            ],
+            [
+              27.947066146338194,
+              -13.073569304390327
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2021-0527",
+      "properties": {
+        "id": "SSM-2021-0527",
+        "licenceNumber": "SSM-2021-0527",
+        "owner": "Southern Cross Manganese",
+        "commodity": "Manganese",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 390,
+        "issueDate": "2021-11-15",
+        "expiryDate": "2031-11-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.966820827122636,
+              -13.073569304390327
+            ],
+            [
+              27.98531870148289,
+              -13.073569304390327
+            ],
+            [
+              27.98531870148289,
+              -13.055551286372308
+            ],
+            [
+              27.966820827122636,
+              -13.055551286372308
+            ],
+            [
+              27.966820827122636,
+              -13.073569304390327
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2016-0529",
+      "properties": {
+        "id": "LSM-2016-0529",
+        "licenceNumber": "LSM-2016-0529",
+        "owner": "Zambezi Metals Plc",
+        "commodity": "Lead/Zinc",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 2400,
+        "issueDate": "2016-01-15",
+        "expiryDate": "2041-01-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.82537828959013,
+              -13.005956705407483
+            ],
+            [
+              27.870688643098863,
+              -13.005956705407483
+            ],
+            [
+              27.870688643098863,
+              -12.961821755087065
+            ],
+            [
+              27.82537828959013,
+              -12.961821755087065
+            ],
+            [
+              27.82537828959013,
+              -13.005956705407483
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2011-0531",
+      "properties": {
+        "id": "EPL-2011-0531",
+        "licenceNumber": "EPL-2011-0531",
+        "owner": "Kabwe Copper Resources Ltd",
+        "commodity": "Copper",
+        "licenceType": "Exploration",
+        "status": "Cancelled",
+        "province": "Copperbelt",
+        "areaHa": 4200,
+        "issueDate": "2011-03-15",
+        "expiryDate": "2015-03-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.871488643098864,
+              -13.005956705407483
+            ],
+            [
+              27.93142860669913,
+              -13.005956705407483
+            ],
+            [
+              27.93142860669913,
+              -12.947571654070474
+            ],
+            [
+              27.871488643098864,
+              -12.947571654070474
+            ],
+            [
+              27.871488643098864,
+              -13.005956705407483
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2021-0536",
+      "properties": {
+        "id": "SSM-2021-0536",
+        "licenceNumber": "SSM-2021-0536",
+        "owner": "Southern Cross Manganese",
+        "commodity": "Manganese",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 370,
+        "issueDate": "2021-08-15",
+        "expiryDate": "2031-08-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.93222860669913,
+              -13.005956705407483
+            ],
+            [
+              27.950726481059384,
+              -13.005956705407483
+            ],
+            [
+              27.950726481059384,
+              -12.987938687389464
+            ],
+            [
+              27.93222860669913,
+              -12.987938687389464
+            ],
+            [
+              27.93222860669913,
+              -13.005956705407483
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2022-0538",
+      "properties": {
+        "id": "SSM-2022-0538",
+        "licenceNumber": "SSM-2022-0538",
+        "owner": "Barotse Mining Company",
+        "commodity": "Gold",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 400,
+        "issueDate": "2022-10-15",
+        "expiryDate": "2032-10-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.951526481059382,
+              -13.005956705407483
+            ],
+            [
+              27.970024355419635,
+              -13.005956705407483
+            ],
+            [
+              27.970024355419635,
+              -12.987938687389464
+            ],
+            [
+              27.951526481059382,
+              -12.987938687389464
+            ],
+            [
+              27.951526481059382,
+              -13.005956705407483
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2017-0540",
+      "properties": {
+        "id": "LSM-2017-0540",
+        "licenceNumber": "LSM-2017-0540",
+        "owner": "Barotse Mining Company",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 2700,
+        "issueDate": "2017-12-15",
+        "expiryDate": "2042-12-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.970824355419637,
+              -13.005956705407483
+            ],
+            [
+              28.018883242755614,
+              -13.005956705407483
+            ],
+            [
+              28.018883242755614,
+              -12.959144521419134
+            ],
+            [
+              27.970824355419637,
+              -12.959144521419134
+            ],
+            [
+              27.970824355419637,
+              -13.005956705407483
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2024-0334",
+      "properties": {
+        "id": "SSM-2024-0334",
+        "licenceNumber": "SSM-2024-0334",
+        "owner": "Ndola West Mining",
+        "commodity": "Gold",
+        "licenceType": "Small-Scale Mining",
+        "status": "Pending",
+        "province": "Western",
+        "areaHa": 410,
+        "issueDate": "2024-12-02",
+        "expiryDate": "2034-12-01"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              23.76186634099685,
+              -15.730308045675109
+            ],
+            [
+              23.780812915717803,
+              -15.730308045675109
+            ],
+            [
+              23.780812915717803,
+              -15.712066192764013
+            ],
+            [
+              23.76186634099685,
+              -15.712066192764013
+            ],
+            [
+              23.76186634099685,
+              -15.730308045675109
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2022-0525",
+      "properties": {
+        "id": "EPL-2022-0525",
+        "licenceNumber": "EPL-2022-0525",
+        "owner": "Eastern Reef Gold Ltd",
+        "commodity": "Gold",
+        "licenceType": "Exploration",
+        "status": "Active",
+        "province": "Western",
+        "areaHa": 6000,
+        "issueDate": "2022-09-15",
+        "expiryDate": "2026-09-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              23.76186634099685,
+              -15.711266192764013
+            ],
+            [
+              23.834345710003213,
+              -15.711266192764013
+            ],
+            [
+              23.834345710003213,
+              -15.641482709048564
+            ],
+            [
+              23.76186634099685,
+              -15.641482709048564
+            ],
+            [
+              23.76186634099685,
+              -15.711266192764013
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2024-0533",
+      "properties": {
+        "id": "SSM-2024-0533",
+        "licenceNumber": "SSM-2024-0533",
+        "owner": "Kariba Minerals Plc",
+        "commodity": "Copper",
+        "licenceType": "Small-Scale Mining",
+        "status": "Pending",
+        "province": "Western",
+        "areaHa": 440,
+        "issueDate": "2024-05-15",
+        "expiryDate": "2034-05-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              23.76186634099685,
+              -15.640682709048564
+            ],
+            [
+              23.781493846908564,
+              -15.640682709048564
+            ],
+            [
+              23.781493846908564,
+              -15.621785252324777
+            ],
+            [
+              23.76186634099685,
+              -15.621785252324777
+            ],
+            [
+              23.76186634099685,
+              -15.640682709048564
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2020-0023",
+      "properties": {
+        "id": "LSM-2020-0023",
+        "licenceNumber": "LSM-2020-0023",
+        "owner": "Lufwanyama Holdings",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Cancelled",
+        "province": "Central",
+        "areaHa": 2800,
+        "issueDate": "2010-08-11",
+        "expiryDate": "2035-08-10"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.31683005313853,
+              -13.914114960524898
+            ],
+            [
+              28.365935513939338,
+              -13.914114960524898
+            ],
+            [
+              28.365935513939338,
+              -13.866443765730942
+            ],
+            [
+              28.31683005313853,
+              -13.866443765730942
+            ],
+            [
+              28.31683005313853,
+              -13.914114960524898
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2023-0534",
+      "properties": {
+        "id": "EPL-2023-0534",
+        "licenceNumber": "EPL-2023-0534",
+        "owner": "Kariba Minerals Plc",
+        "commodity": "Lead/Zinc",
+        "licenceType": "Exploration",
+        "status": "Active",
+        "province": "Copperbelt",
+        "areaHa": 5100,
+        "issueDate": "2023-06-15",
+        "expiryDate": "2027-06-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.36673551393934,
+              -13.914114960524898
+            ],
+            [
+              28.43300839686167,
+              -13.914114960524898
+            ],
+            [
+              28.43300839686167,
+              -13.849777767474963
+            ],
+            [
+              28.36673551393934,
+              -13.849777767474963
+            ],
+            [
+              28.36673551393934,
+              -13.914114960524898
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ASM-2023-0778",
+      "properties": {
+        "id": "ASM-2023-0778",
+        "licenceNumber": "ASM-2023-0778",
+        "owner": "Mulungushi Gems",
+        "commodity": "Emerald",
+        "licenceType": "Artisanal",
+        "status": "Active",
+        "province": "Muchinga",
+        "areaHa": 60,
+        "issueDate": "2023-04-27",
+        "expiryDate": "2028-04-26"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.02966114794455,
+              -12.749298370860025
+            ],
+            [
+              32.048133239129925,
+              -12.749298370860025
+            ],
+            [
+              32.048133239129925,
+              -12.731280352842006
+            ],
+            [
+              32.02966114794455,
+              -12.731280352842006
+            ],
+            [
+              32.02966114794455,
+              -12.749298370860025
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2024-0503",
+      "properties": {
+        "id": "SSM-2024-0503",
+        "licenceNumber": "SSM-2024-0503",
+        "owner": "Lufwanyama Holdings",
+        "commodity": "Gold",
+        "licenceType": "Small-Scale Mining",
+        "status": "Pending",
+        "province": "Eastern",
+        "areaHa": 460,
+        "issueDate": "2024-11-15",
+        "expiryDate": "2034-11-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.04893323912992,
+              -12.749298370860025
+            ],
+            [
+              32.06874235005582,
+              -12.749298370860025
+            ],
+            [
+              32.06874235005582,
+              -12.729976199157749
+            ],
+            [
+              32.04893323912992,
+              -12.729976199157749
+            ],
+            [
+              32.04893323912992,
+              -12.749298370860025
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ASM-2019-0535",
+      "properties": {
+        "id": "ASM-2019-0535",
+        "licenceNumber": "ASM-2019-0535",
+        "owner": "Victoria Falls Aggregates",
+        "commodity": "Gold",
+        "licenceType": "Artisanal",
+        "status": "Suspended",
+        "province": "Muchinga",
+        "areaHa": 60,
+        "issueDate": "2019-07-15",
+        "expiryDate": "2024-07-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.02966114794455,
+              -12.729176199157749
+            ],
+            [
+              32.048133239129925,
+              -12.729176199157749
+            ],
+            [
+              32.048133239129925,
+              -12.71115818113973
+            ],
+            [
+              32.02966114794455,
+              -12.71115818113973
+            ],
+            [
+              32.02966114794455,
+              -12.729176199157749
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2023-0504",
+      "properties": {
+        "id": "EPL-2023-0504",
+        "licenceNumber": "EPL-2023-0504",
+        "owner": "Kalahari Resources Ltd",
+        "commodity": "Manganese",
+        "licenceType": "Exploration",
+        "status": "Reserved",
+        "province": "Luapula",
+        "areaHa": 6100,
+        "issueDate": "2023-12-15",
+        "expiryDate": "2027-12-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.38880417823247,
+              -10.4544324863463
+            ],
+            [
+              29.460346465767778,
+              -10.4544324863463
+            ],
+            [
+              29.460346465767778,
+              -10.384069876653449
+            ],
+            [
+              29.38880417823247,
+              -10.384069876653449
+            ],
+            [
+              29.38880417823247,
+              -10.4544324863463
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2016-0505",
+      "properties": {
+        "id": "LSM-2016-0505",
+        "licenceNumber": "LSM-2016-0505",
+        "owner": "Kabwe Copper Resources Ltd",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Active",
+        "province": "Lusaka",
+        "areaHa": 2900,
+        "issueDate": "2016-01-15",
+        "expiryDate": "2041-01-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.05622470508393,
+              -15.50093506663117
+            ],
+            [
+              29.10656508824707,
+              -15.50093506663117
+            ],
+            [
+              29.10656508824707,
+              -15.452420068368697
+            ],
+            [
+              29.05622470508393,
+              -15.452420068368697
+            ],
+            [
+              29.05622470508393,
+              -15.50093506663117
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "SSM-2020-0513",
+      "properties": {
+        "id": "SSM-2020-0513",
+        "licenceNumber": "SSM-2020-0513",
+        "owner": "Chambeshi Mining Ltd",
+        "commodity": "Gold",
+        "licenceType": "Small-Scale Mining",
+        "status": "Active",
+        "province": "Lusaka",
+        "areaHa": 410,
+        "issueDate": "2020-09-15",
+        "expiryDate": "2030-09-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.107365088247068,
+              -15.50093506663117
+            ],
+            [
+              29.126293293916213,
+              -15.50093506663117
+            ],
+            [
+              29.126293293916213,
+              -15.482693213720074
+            ],
+            [
+              29.107365088247068,
+              -15.482693213720074
+            ],
+            [
+              29.107365088247068,
+              -15.50093506663117
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LSM-2024-0514",
+      "properties": {
+        "id": "LSM-2024-0514",
+        "licenceNumber": "LSM-2024-0514",
+        "owner": "Bangweulu Resources",
+        "commodity": "Copper",
+        "licenceType": "Large-Scale Mining",
+        "status": "Pending",
+        "province": "Muchinga",
+        "areaHa": 2600,
+        "issueDate": "2024-10-15",
+        "expiryDate": "2049-10-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              31.71500272454177,
+              -11.268508527867473
+            ],
+            [
+              31.761839073458585,
+              -11.268508527867473
+            ],
+            [
+              31.761839073458585,
+              -11.222571415132403
+            ],
+            [
+              31.71500272454177,
+              -11.222571415132403
+            ],
+            [
+              31.71500272454177,
+              -11.268508527867473
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2023-0515",
+      "properties": {
+        "id": "EPL-2023-0515",
+        "licenceNumber": "EPL-2023-0515",
+        "owner": "Muchinga Metals Ltd",
+        "commodity": "Manganese",
+        "licenceType": "Exploration",
+        "status": "Active",
+        "province": "Northern",
+        "areaHa": 5900,
+        "issueDate": "2023-11-15",
+        "expiryDate": "2027-11-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.6513614812795,
+              -9.923732425620953
+            ],
+            [
+              30.721604671578667,
+              -9.923732425620953
+            ],
+            [
+              30.721604671578667,
+              -9.854532914378893
+            ],
+            [
+              30.6513614812795,
+              -9.854532914378893
+            ],
+            [
+              30.6513614812795,
+              -9.923732425620953
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "EPL-2019-0523",
+      "properties": {
+        "id": "EPL-2019-0523",
+        "licenceNumber": "EPL-2019-0523",
+        "owner": "Mkushi Exploration Co.",
+        "commodity": "Manganese",
+        "licenceType": "Exploration",
+        "status": "Suspended",
+        "province": "Northern",
+        "areaHa": 4700,
+        "issueDate": "2019-07-15",
+        "expiryDate": "2023-07-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.72240467157867,
+              -9.923732425620953
+            ],
+            [
+              30.785098840720682,
+              -9.923732425620953
+            ],
+            [
+              30.785098840720682,
+              -9.861969771563286
+            ],
+            [
+              30.72240467157867,
+              -9.861969771563286
+            ],
+            [
+              30.72240467157867,
+              -9.923732425620953
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ASM-2023-0524",
+      "properties": {
+        "id": "ASM-2023-0524",
+        "licenceNumber": "ASM-2023-0524",
+        "owner": "Mulungushi Gems",
+        "commodity": "Emerald",
+        "licenceType": "Artisanal",
+        "status": "Active",
+        "province": "Southern",
+        "areaHa": 50,
+        "issueDate": "2023-08-15",
+        "expiryDate": "2028-08-14"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              26.905119701282572,
+              -16.689868887508982
+            ],
+            [
+              26.92392925471749,
+              -16.689868887508982
+            ],
+            [
+              26.92392925471749,
+              -16.671850869490964
+            ],
+            [
+              26.905119701282572,
+              -16.671850869490964
+            ],
+            [
+              26.905119701282572,
+              -16.689868887508982
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

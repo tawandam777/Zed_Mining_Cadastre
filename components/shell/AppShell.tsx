@@ -1,0 +1,86 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useEffect, useRef } from "react";
+import { MapProvider } from "@/components/map/MapContext";
+import { ZoomHomeControl } from "@/components/map/controls/ZoomHomeControl";
+import { TopBar } from "@/components/shell/TopBar";
+import { StatusBar } from "@/components/shell/StatusBar";
+import { LeftPanel } from "@/components/shell/LeftPanel";
+import { RightPanel } from "@/components/shell/RightPanel";
+import { ToolRail } from "@/components/tools/ToolRail";
+import { ToolStatusPanel } from "@/components/tools/ToolStatusPanel";
+import { BasemapSwitcher } from "@/components/map/controls/BasemapSwitcher";
+import { AttributeTable } from "@/components/attribute-table/AttributeTable";
+import { FloatingLegend } from "@/components/layers/FloatingLegend";
+import { HelpButton } from "@/components/shell/HelpButton";
+import { Toaster } from "@/components/shell/Toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { useMapStore } from "@/store/useMapStore";
+import { useLicences } from "@/lib/useLicences";
+
+const MapCanvas = dynamic(() => import("@/components/map/MapCanvas"), { ssr: false });
+
+export function AppShell() {
+  const shellRef = useRef<HTMLDivElement | null>(null);
+  const selectedLicenceId = useMapStore((s) => s.selectedLicenceId);
+  const toolSelectionIds = useMapStore((s) => s.toolSelectionIds);
+  const attributeTableOpen = useMapStore((s) => s.attributeTableOpen);
+  const theme = useMapStore((s) => s.theme);
+  const setTheme = useMapStore((s) => s.setTheme);
+  const licences = useLicences();
+
+  const rightPanelOpen = Boolean(selectedLicenceId) || toolSelectionIds.length > 0;
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
+  // Persisted layer settings (basemap, boundary/licence opacity, status visibility) are
+  // read from localStorage only after mount — skipHydration on the store avoids a
+  // server/client hydration mismatch (localStorage isn't available during SSR).
+  useEffect(() => {
+    void useMapStore.persist.rehydrate();
+  }, []);
+
+  // Theme itself is intentionally not persisted (see the store's partialize comment), so
+  // every fresh load otherwise defaults to light — seed it from the OS preference instead
+  // of always forcing light on a system set to dark.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
+  }, [setTheme]);
+
+  return (
+    <TooltipProvider delay={300}>
+      <MapProvider>
+        <div ref={shellRef} className="bg-background flex h-full min-h-0 flex-1 flex-col">
+          <TopBar shellRef={shellRef} />
+          <div className="flex min-h-0 flex-1">
+            <LeftPanel />
+            <div className="relative min-w-0 flex-1 overflow-hidden">
+              <MapCanvas />
+              <ToolRail />
+              <ToolStatusPanel />
+              <ZoomHomeControl />
+              <BasemapSwitcher />
+              <FloatingLegend />
+              <HelpButton />
+              <Toaster />
+              {!licences && (
+                <div className="bg-background/70 dark:bg-background/60 pointer-events-none absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[1px]">
+                  <div className="border-border bg-popover flex items-center gap-2.5 rounded-md border px-4 py-2.5 shadow-md">
+                    <span className="border-muted-foreground/30 border-t-brand-accent h-4 w-4 animate-spin rounded-full border-2" />
+                    <span className="text-muted-foreground text-[12.5px]">Loading licence data…</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            {rightPanelOpen && <RightPanel />}
+          </div>
+          {attributeTableOpen && <AttributeTable />}
+          <StatusBar />
+        </div>
+      </MapProvider>
+    </TooltipProvider>
+  );
+}

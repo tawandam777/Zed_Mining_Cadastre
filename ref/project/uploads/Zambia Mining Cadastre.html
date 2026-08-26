@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zambia Mining Cadastre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #e9edef;
+    --surface: #ffffff;
+    --surface-2: #f4f6f7;
+    --surface-3: #eef2f3;
+    --border: #d8dee2;
+    --border-strong: #c4cdd2;
+    --ink: #15242d;
+    --ink-2: #465863;
+    --ink-3: #7b8a93;
+    --brand: #103a48;
+    --brand-2: #0b2c37;
+    --brand-line: #1d5567;
+    --focus: #1f6f86;
+
+    --active: #2f8a63;
+    --pending: #bf8420;
+    --expired: #8a929b;
+    --suspended: #b1483d;
+    --relinquished: #5d7a93;
+
+    --shadow-sm: 0 1px 2px rgba(16, 36, 45, 0.06);
+    --shadow-md: 0 6px 20px rgba(16, 36, 45, 0.12);
+    --sidebar-w: 344px;
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: "Public Sans", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono { font-family: "IBM Plex Mono", monospace; }
+
+  .app {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border-strong);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    z-index: 20;
+  }
+
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: var(--brand);
+    color: #eaf2f4;
+    border-bottom: 3px solid var(--brand-line);
+    flex-shrink: 0;
+  }
+  .emblem {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+  }
+  .app-header .title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.15;
+    color: #ffffff;
+  }
+  .app-header .subtitle {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #9fc0c9;
+    margin-top: 3px;
+    font-weight: 600;
+  }
+
+  .scroll-region {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .scroll-region::-webkit-scrollbar { width: 10px; }
+  .scroll-region::-webkit-scrollbar-thumb {
+    background: #cdd6da;
+    border: 3px solid var(--surface);
+    border-radius: 10px;
+  }
+  .scroll-region::-webkit-scrollbar-thumb:hover { background: #b4c0c6; }
+
+  .section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+
+  /* Search */
+  .search-wrap { position: relative; }
+  .search-wrap svg {
+    position: absolute;
+    left: 11px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px 0 34px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .12s, box-shadow .12s, background .12s;
+  }
+  .search-input::placeholder { color: var(--ink-3); }
+  .search-input:focus {
+    border-color: var(--focus);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(31, 111, 134, 0.14);
+  }
+  .search-clear {
+    position: absolute; right: 6px; top: 50%;
+    transform: translateY(-50%);
+    border: none; background: none; cursor: pointer;
+    color: var(--ink-3); padding: 6px; border-radius: 4px;
+    display: none; line-height: 0;
+  }
+  .search-clear:hover { color: var(--ink); background: var(--surface-3); }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-tile {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+  .stat-tile .val {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .stat-tile .lab {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin-top: 3px;
+  }
+  .stat-tile.accent { border-left: 3px solid var(--active); }
+  .stat-tile.accent .val { color: var(--active); }
+  .stat-tile.pend { border-left: 3px solid var(--pending); }
+  .stat-tile.pend .val { color: var(--pending); }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+    font-weight: 700;
+    margin: 0 0 10px 0;
+  }
+
+  /* Filters */
+  .filter-group { border-bottom: 1px solid var(--border); }
+  .filter-group:last-child { border-bottom: none; }
+  .filter-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--ink);
+    text-align: left;
+  }
+  .filter-head:hover { background: var(--surface-2); }
+  .filter-head .ftitle {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .filter-head .meta { display: flex; align-items: center; gap: 8px; }
+  .filter-count {
+    font-size: 11px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .chev { transition: transform .18s ease; color: var(--ink-3); }
+  .filter-group.collapsed .chev { transform: rotate(-90deg); }
+  .filter-body {
+    padding: 2px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .filter-group.collapsed .filter-body { display: none; }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 6px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    user-select: none;
+  }
+  .check:hover { background: var(--surface-2); }
+  .check input { position: absolute; opacity: 0; pointer-events: none; }
+  .box {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 3px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    transition: background .1s, border-color .1s;
+  }
+  .box svg { opacity: 0; color: #fff; }
+  .check input:checked + .box { background: var(--brand); border-color: var(--brand); }
+  .check input:checked + .box svg { opacity: 1; }
+  .check input:focus-visible + .box { box-shadow: 0 0 0 3px rgba(31,111,134,.2); }
+  .check .clabel { font-size: 13px; color: var(--ink-2); flex: 1; }
+  .check .ccount { font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .check .swatch {
+    width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+  }
+
+  /* List */
+  .list-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 14px 16px 8px;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 2;
+  }
+  .list-head .lh-title { font-size: 12px; text-transform: uppercase; letter-spacing:.06em; font-weight: 700; color: var(--ink); }
+  .list-head .lh-count { font-size: 12px; color: var(--ink-3); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .list { padding: 0 12px 24px; display: flex; flex-direction: column; gap: 8px; }
+
+  .lic-card {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--st-color, var(--border-strong));
+    border-radius: var(--radius);
+    padding: 11px 12px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: border-color .1s, box-shadow .1s, background .1s;
+  }
+  .lic-card:hover { background: var(--surface-2); box-shadow: var(--shadow-sm); }
+  .lic-card.selected {
+    border-color: var(--focus);
+    border-left-color: var(--st-color);
+    box-shadow: 0 0 0 1px var(--focus), var(--shadow-sm);
+    background: #fff;
+  }
+  .lic-row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+  .lic-num { font-size: 12px; font-weight: 600; color: var(--ink); letter-spacing: .01em; }
+  .lic-holder { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.25; }
+  .lic-meta { display: flex; flex-wrap: wrap; gap: 5px 6px; align-items: center; }
+  .tag {
+    font-size: 11px;
+    color: var(--ink-2);
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .lic-region { font-size: 11px; color: var(--ink-3); margin-top: 7px; display: flex; align-items: center; gap: 5px; }
+  .lic-region svg { flex-shrink: 0; color: var(--ink-3); }
+
+  /* Status pill */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px 2px 7px;
+    border-radius: 100px;
+    color: var(--pc, #444);
+    background: color-mix(in srgb, var(--pc) 14%, #fff);
+    border: 1px solid color-mix(in srgb, var(--pc) 32%, #fff);
+    white-space: nowrap;
+  }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pc); flex-shrink: 0; }
+  [data-status="Active"]      { --pc: var(--active); --st-color: var(--active); }
+  [data-status="Pending"]     { --pc: var(--pending); --st-color: var(--pending); }
+  [data-status="Expired"]     { --pc: var(--expired); --st-color: var(--expired); }
+  [data-status="Suspended"]   { --pc: var(--suspended); --st-color: var(--suspended); }
+  [data-status="Relinquished"]{ --pc: var(--relinquished); --st-color: var(--relinquished); }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 13px;
+  }
+  .empty-state svg { color: var(--border-strong); margin-bottom: 10px; }
+  .link-btn {
+    background: none; border: none; color: var(--focus); cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 600; padding: 4px; text-decoration: underline;
+  }
+
+  /* ============ MAP ============ */
+  .map {
+    position: relative;
+    overflow: hidden;
+    background: #d7e0e1;
+  }
+  #map-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    display: block;
+  }
+  #map-svg.dragging { cursor: grabbing; }
+
+  .parcel {
+    fill: var(--pf);
+    stroke: var(--ps);
+    stroke-width: 1.6;
+    cursor: pointer;
+    transition: fill .12s, stroke-width .12s, opacity .15s;
+    vector-effect: non-scaling-stroke;
+  }
+  .parcel:hover { fill: color-mix(in srgb, var(--ps) 52%, transparent); }
+  .parcel.dim { opacity: 0.1; pointer-events: none; }
+  .parcel.selected {
+    fill: color-mix(in srgb, var(--ps) 56%, transparent);
+    stroke-width: 3.2;
+  }
+  .parcel-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    font-weight: 500;
+    fill: #11333f;
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: rgba(255,255,255,.85);
+    stroke-width: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .parcel-label.show { opacity: 1; }
+
+  .country { fill: #e9efe6; stroke: #7f968f; stroke-width: 1.8; vector-effect: non-scaling-stroke; }
+  .lake { fill: #c5dde8; stroke: #9fc3d4; stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .river { fill: none; stroke: #a8cdda; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .graticule { stroke: #c2d0d0; stroke-width: 1; vector-effect: non-scaling-stroke; opacity: .8; }
+  .grat-label { font-family: "IBM Plex Mono", monospace; font-size: 10px; fill: #8b9a9a; }
+  .prov-line { fill: none; stroke: #6a5a78; stroke-width: 1.3; stroke-dasharray: 7 5; vector-effect: non-scaling-stroke; opacity: .65; }
+  .prov-label { font-family: "Public Sans", sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .09em; fill: #7d6f88; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,.55); stroke-width: 2.6px; }
+  .neighbor-label { font-family: "Public Sans", sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .16em; fill: #9aa9a9; text-anchor: middle; }
+  .town-dot { fill: #2a3b44; stroke: #fff; stroke-width: 1.5; }
+  .town-label { font-family: "Public Sans", sans-serif; font-size: 12.5px; font-weight: 700; fill: #25333b; paint-order: stroke; stroke: rgba(255,255,255,.85); stroke-width: 3px; }
+  .place-dot { fill: #6f8088; }
+  .place-label { font-family: "Public Sans", sans-serif; font-size: 11px; font-weight: 500; fill: #5a6b73; paint-order: stroke; stroke: rgba(255,255,255,.75); stroke-width: 2.5px; }
+  .occ-mark { stroke: #6b4a16; stroke-width: 1.6; fill: none; vector-effect: non-scaling-stroke; }
+
+  .layer-hidden { display: none; }
+
+  /* Floating controls */
+  .map-overlay { position: absolute; z-index: 10; }
+
+  .layer-toggle {
+    top: 16px; right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    width: 210px;
+    overflow: hidden;
+  }
+  .lt-head {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700;
+    color: var(--ink-3); padding: 9px 12px 7px; border-bottom: 1px solid var(--border);
+  }
+  .lt-body { padding: 5px 6px 7px; }
+  .lt-row { display: flex; align-items: center; gap: 9px; padding: 6px 7px; border-radius: var(--radius); cursor: pointer; }
+  .lt-row:hover { background: var(--surface-2); }
+  .lt-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .lt-row .clabel { font-size: 12.5px; color: var(--ink-2); flex: 1; }
+  .lt-icon { width: 18px; display: grid; place-items: center; }
+  .lt-row input:checked + .box { background: var(--brand); border-color: var(--brand); }
+  .lt-row input:checked + .box svg { opacity: 1; }
+  .lt-row input:focus-visible + .box { box-shadow: 0 0 0 3px rgba(31,111,134,.2); }
+
+  .zoom-ctl {
+    top: 16px; left: 16px;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .zoom-ctl button {
+    width: 36px; height: 34px;
+    border: none; background: var(--surface); cursor: pointer;
+    color: var(--ink); font-size: 18px; display: grid; place-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .zoom-ctl button:last-child { border-bottom: none; }
+  .zoom-ctl button:hover { background: var(--surface-2); }
+  .zoom-ctl button:active { background: var(--surface-3); }
+
+  .legend {
+    bottom: 16px; right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 11px 13px 12px;
+    min-width: 168px;
+  }
+  .legend h4 { margin: 0 0 9px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); font-weight: 700; }
+  .legend-row { display: flex; align-items: center; gap: 9px; padding: 3px 0; cursor: pointer; }
+  .legend-row .lg-sw {
+    width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+    border: 1.5px solid var(--lc);
+    background: color-mix(in srgb, var(--lc) 38%, transparent);
+  }
+  .legend-row .lg-label { font-size: 12px; color: var(--ink-2); flex: 1; }
+  .legend-row .lg-n { font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .legend-row.off { opacity: .4; }
+  .legend-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+  .lg-title { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); font-weight: 700; }
+  .legend-select { font-family: inherit; font-size: 10.5px; font-weight: 700; color: var(--ink-2); border: 1px solid var(--border-strong); border-radius: 4px; background: var(--surface-2); padding: 3px 5px; cursor: pointer; outline: none; }
+  .legend-select:focus { border-color: var(--focus); }
+
+  .map-meta {
+    bottom: 16px; left: 16px;
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-start;
+    pointer-events: none;
+  }
+  .scalebar { display: flex; flex-direction: column; gap: 3px; background: rgba(255,255,255,.82); padding: 5px 7px; border-radius: 3px; border: 1px solid var(--border); }
+  .scalebar .bar { display: flex; height: 6px; width: 148px; }
+  .scalebar .bar div { flex: 1; border: 1px solid #4a5a62; }
+  .scalebar .bar div:nth-child(odd) { background: #4a5a62; }
+  .scalebar .bar div:nth-child(even) { background: #fff; }
+  .scalebar .ticks { display: flex; justify-content: space-between; width: 148px; font-size: 8.5px; color: var(--ink-2); font-family: "IBM Plex Mono", monospace; }
+  .crs-note { font-size: 9px; color: var(--ink-2); font-family: "IBM Plex Mono", monospace; background: rgba(255,255,255,.82); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); }
+
+  .north { position: absolute; top: 176px; right: 22px; z-index: 9; pointer-events: none; }
+
+  /* Toolbar divider */
+  .map-toolbar .tb-div { height: 1px; background: var(--border); margin: 3px 6px; }
+
+  /* Cadastral snap grid */
+  #layer-cadgrid { pointer-events: none; }
+  .cad-grid-line { stroke: var(--focus); stroke-width: 0.8; vector-effect: non-scaling-stroke; opacity: .26; }
+
+  /* Drawing / measurement geometry */
+  .draw-line { fill: none; stroke: var(--focus); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .draw-line.pending { stroke-dasharray: 1 6; }
+  .draw-poly { fill: color-mix(in srgb, var(--focus) 13%, transparent); stroke: var(--focus); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .draw-poly.pending { stroke-dasharray: 6 5; }
+  .draw-poly.sketch-ok { fill: color-mix(in srgb, var(--active) 16%, transparent); stroke: var(--active); }
+  .draw-poly.sketch-clash { fill: color-mix(in srgb, var(--suspended) 16%, transparent); stroke: var(--suspended); }
+  .draw-poly.sketch-pending { fill: color-mix(in srgb, var(--pending) 15%, transparent); stroke: var(--pending); }
+  .draw-vertex { fill: #fff; stroke: var(--focus); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .draw-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 600; fill: #11333f; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,.9); stroke-width: 3.4px; pointer-events: none; }
+  .draw-marker-core { fill: var(--focus); stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .draw-marker-halo { fill: color-mix(in srgb, var(--focus) 18%, transparent); stroke: none; }
+  .draw-marker-label { font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 600; fill: #22323b; paint-order: stroke; stroke: rgba(255,255,255,.9); stroke-width: 3px; pointer-events: none; }
+  .parcel.clash { stroke-width: 3.4; animation: clashPulse 1.1s ease-in-out infinite; }
+  @keyframes clashPulse { 0%,100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
+  .buffer-ring { fill: color-mix(in srgb, var(--focus) 9%, transparent); stroke: var(--focus); stroke-width: 1.8; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+  .parcel.buffered { stroke: var(--focus); stroke-width: 3.2; }
+  .buf-ctl { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .buf-ctl label { font-size: 10.5px; color: var(--ink-3); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .buf-ctl input[type=range] { flex: 1; accent-color: var(--focus); min-width: 0; }
+  .buf-ctl input[type=number] { width: 52px; height: 26px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--surface-2); padding: 0 6px; font-size: 12px; font-family: "IBM Plex Mono", monospace; color: var(--ink); }
+  .hud-list { margin-top: 8px; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--ink-2); line-height: 1.5; max-height: 58px; overflow-y: auto; }
+
+  /* Drawing HUD */
+  .draw-hud {
+    bottom: 16px; left: 50%; transform: translateX(-50%);
+    width: 270px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    display: none;
+    overflow: hidden;
+  }
+  .draw-hud.show { display: block; }
+  .dh-top { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px 8px 12px; border-bottom: 1px solid var(--border); }
+  .dh-tool { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; color: var(--ink); }
+  .dh-x { border: none; background: none; cursor: pointer; color: var(--ink-3); width: 22px; height: 22px; border-radius: 4px; display: grid; place-items: center; line-height: 0; }
+  .dh-x:hover { background: var(--surface-3); color: var(--ink); }
+  .dh-readout { padding: 10px 12px; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+  .dh-readout b { color: var(--ink); font-family: "IBM Plex Mono", monospace; font-weight: 700; }
+  .dh-conflict { margin: 0 12px 10px; padding: 9px 11px; border-radius: var(--radius); border: 1px solid; font-size: 12px; }
+  .dh-conflict.clash { background: color-mix(in srgb, var(--suspended) 8%, #fff); border-color: color-mix(in srgb, var(--suspended) 32%, #fff); }
+  .dh-conflict.ok { background: color-mix(in srgb, var(--active) 8%, #fff); border-color: color-mix(in srgb, var(--active) 30%, #fff); }
+  .dh-conflict .cf-head { font-weight: 700; margin-bottom: 3px; }
+  .dh-conflict.clash .cf-head { color: var(--suspended); }
+  .dh-conflict.ok .cf-head { color: var(--active); }
+  .dh-conflict .cf-list { color: var(--ink-2); font-family: "IBM Plex Mono", monospace; font-size: 11px; line-height: 1.5; }
+  .dh-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 12px; }
+  .dh-actions button { flex: 1 1 auto; min-width: 64px; height: 30px; border-radius: var(--radius); font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink-2); padding: 0 8px; }
+  .dh-actions button:hover { background: var(--surface-2); color: var(--ink); }
+  .dh-actions button[data-act="finish"], .dh-actions button[data-act="copy"] { background: var(--brand); border-color: var(--brand); color: #fff; flex-basis: 100%; }
+  .dh-actions button[data-act="finish"]:hover, .dh-actions button[data-act="copy"]:hover { background: var(--brand-2); }
+
+  /* ============ MAP POPUP ============ */
+  .map-popup {
+    position: absolute;
+    z-index: 22;
+    width: 250px;
+    left: 0; top: 0;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    box-shadow: var(--shadow-md);
+    transform: translate(-50%, calc(-100% - 14px));
+    display: none;
+  }
+  .map-popup.show { display: block; }
+  .map-popup.below { transform: translate(-50%, 14px); }
+  .popup-tail {
+    position: absolute; left: 50%; bottom: -6px;
+    width: 11px; height: 11px;
+    background: var(--surface);
+    border-right: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-strong);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .map-popup.below .popup-tail { bottom: auto; top: -6px; transform: translateX(-50%) rotate(225deg); }
+  .popup-head { display: flex; align-items: center; gap: 8px; padding: 11px 11px 8px 12px; }
+  .popup-head .lic-num { font-size: 12.5px; font-weight: 700; flex: 1; }
+  .popup-close {
+    border: none; background: none; cursor: pointer; color: var(--ink-3);
+    width: 22px; height: 22px; border-radius: 4px; display: grid; place-items: center; line-height: 0; flex-shrink: 0;
+  }
+  .popup-close:hover { background: var(--surface-3); color: var(--ink); }
+  .popup-holder { padding: 0 12px 9px; font-size: 14.5px; font-weight: 700; color: var(--ink); line-height: 1.22; }
+  .popup-meta { padding: 0 12px 10px; }
+  .popup-region { padding: 0 12px 11px; margin-top: 0; }
+  .popup-foot { padding: 10px 12px 12px; border-top: 1px solid var(--border); }
+  .popup-link {
+    width: 100%; height: 33px; border-radius: var(--radius);
+    border: 1px solid var(--brand); background: var(--brand); color: #fff;
+    font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .popup-link:hover { background: var(--brand-2); }
+
+  /* ============ DETAIL PANEL ============ */
+  .detail {
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 360px;
+    max-width: 90%;
+    background: var(--surface);
+    border-left: 1px solid var(--border-strong);
+    box-shadow: -10px 0 30px rgba(16,36,45,.14);
+    transform: translateX(105%);
+    transition: transform .26s cubic-bezier(.22,.61,.36,1);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+  }
+  .detail.open { transform: translateX(0); }
+
+  .detail-head {
+    background: var(--brand);
+    color: #fff;
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 3px solid var(--brand-line);
+  }
+  .detail-head .dh-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #9fc0c9; font-weight: 700; }
+  .detail-head .dh-num { font-size: 18px; font-weight: 700; margin-top: 3px; letter-spacing: .01em; }
+  .detail-close {
+    background: rgba(255,255,255,.12); border: none; color: #fff; cursor: pointer;
+    width: 30px; height: 30px; border-radius: 4px; display: grid; place-items: center; flex-shrink: 0;
+  }
+  .detail-close:hover { background: rgba(255,255,255,.24); }
+
+  .detail-body { flex: 1; overflow-y: auto; padding: 18px; }
+  .detail-body::-webkit-scrollbar { width: 10px; }
+  .detail-body::-webkit-scrollbar-thumb { background: #cdd6da; border: 3px solid var(--surface); border-radius: 10px; }
+
+  .holder-block { margin-bottom: 18px; }
+  .holder-block .hb-name { font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.2; margin-bottom: 8px; }
+
+  .dl { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .dl .cell { background: var(--surface); padding: 11px 13px; }
+  .dl .cell.full { grid-column: 1 / -1; }
+  .dl dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 700; margin-bottom: 4px; }
+  .dl dd { margin: 0; font-size: 14px; color: var(--ink); font-weight: 500; }
+  .dl dd.big { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .term-bar {
+    margin-top: 16px;
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 13px;
+    background: var(--surface-2);
+  }
+  .term-bar .tb-title { font-size: 10.5px; text-transform: uppercase; letter-spacing:.05em; color: var(--ink-3); font-weight: 700; margin-bottom: 10px; display:flex; justify-content: space-between; }
+  .term-track { height: 7px; background: var(--surface-3); border-radius: 100px; overflow: hidden; border: 1px solid var(--border); }
+  .term-fill { height: 100%; border-radius: 100px; }
+  .term-dates { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--ink-2); }
+  .term-dates .mono { font-weight: 600; }
+
+  .fee-box { margin-top: 12px; border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; background: var(--surface-2); }
+  .fee-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .fee-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 700; }
+  .fee-note { font-size: 11px; color: var(--ink-3); font-family: "IBM Plex Mono", monospace; }
+  .fee-amt { font-size: 22px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+  .hist-block { margin-top: 18px; }
+  .hist-title { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 700; margin-bottom: 13px; }
+  .hist-item { position: relative; display: flex; gap: 12px; padding-bottom: 16px; }
+  .hist-item:last-child { padding-bottom: 0; }
+  .hist-item::before { content: ""; position: absolute; left: 5px; top: 13px; bottom: -3px; width: 1.5px; background: var(--border); }
+  .hist-item:last-child::before { display: none; }
+  .hist-dot { position: relative; width: 11px; height: 11px; border-radius: 50%; margin-top: 2px; flex-shrink: 0; background: var(--ink-3); box-shadow: 0 0 0 3px var(--surface); z-index: 1; }
+  .hist-item.active .hist-dot { background: var(--active); }
+  .hist-item.pending .hist-dot { background: var(--pending); }
+  .hist-item.suspended .hist-dot { background: var(--suspended); }
+  .hist-item.expired .hist-dot { background: var(--expired); }
+  .hist-item.relinquished .hist-dot { background: var(--relinquished); }
+  .hist-date { font-size: 10.5px; color: var(--ink-3); }
+  .hist-ev { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-top: 1px; }
+  .hist-note { font-size: 12px; color: var(--ink-2); margin-top: 2px; line-height: 1.4; }
+
+  .detail-foot { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 9px; }
+  .btn {
+    flex: 1; height: 38px; border-radius: var(--radius); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .btn-primary { background: var(--brand); color: #fff; border: 1px solid var(--brand); }
+  .btn-primary:hover { background: var(--brand-2); }
+  .btn-ghost { background: var(--surface); color: var(--ink-2); border: 1px solid var(--border-strong); }
+  .btn-ghost:hover { background: var(--surface-2); }
+
+  .scrim {
+    position: absolute; inset: 0; background: rgba(16,36,45,.18);
+    opacity: 0; pointer-events: none; transition: opacity .26s; z-index: 25;
+  }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+
+  /* ============ MODAL (documents / export / report) ============ */
+  .modal-scrim { position: absolute; inset: 0; background: rgba(16,36,45,.32); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+  .modal-scrim.show { opacity: 1; pointer-events: auto; }
+  .modal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -48%) scale(.98);
+    width: 480px; max-width: 92%; max-height: 84%;
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px;
+    box-shadow: 0 24px 60px rgba(16,36,45,.3); z-index: 41;
+    display: flex; flex-direction: column; opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s;
+  }
+  .modal.show { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px; background: var(--brand); color: #fff; border-bottom: 3px solid var(--brand-line); border-radius: 8px 8px 0 0; }
+  .mh-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #9fc0c9; font-weight: 700; }
+  .mh-title { font-size: 16px; font-weight: 700; margin-top: 3px; line-height: 1.2; }
+  .modal-close { background: rgba(255,255,255,.12); border: none; color: #fff; cursor: pointer; width: 30px; height: 30px; border-radius: 4px; display: grid; place-items: center; flex-shrink: 0; line-height: 0; }
+  .modal-close:hover { background: rgba(255,255,255,.24); }
+  .modal-body { overflow-y: auto; padding: 16px 18px 18px; }
+  .modal-sec { margin-bottom: 18px; }
+  .modal-sec:last-child { margin-bottom: 0; }
+  .ms-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 700; margin-bottom: 10px; }
+  .doc-list { display: flex; flex-direction: column; gap: 7px; }
+  .doc-row { display: flex; align-items: center; gap: 11px; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  .doc-ic { width: 34px; height: 34px; border-radius: 5px; display: grid; place-items: center; font-size: 9px; font-weight: 800; letter-spacing: .02em; color: #fff; flex-shrink: 0; font-family: "IBM Plex Mono", monospace; }
+  .doc-ic.pdf { background: #b1483d; } .doc-ic.dwg { background: #3d6db1; } .doc-ic.csv, .doc-ic.xls { background: #2f8a63; }
+  .doc-main { flex: 1; min-width: 0; }
+  .doc-name { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .doc-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .doc-dl { border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink-2); cursor: pointer; width: 32px; height: 32px; border-radius: var(--radius); display: grid; place-items: center; flex-shrink: 0; }
+  .doc-dl:hover { background: var(--surface-2); color: var(--brand); }
+  .exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .exp-grid button { display: flex; align-items: center; gap: 9px; padding: 11px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink); text-align: left; }
+  .exp-grid button:hover { background: var(--surface-2); border-color: var(--focus); }
+  .exp-grid button .ei { width: 26px; height: 26px; border-radius: 5px; display: grid; place-items: center; background: var(--surface-3); color: var(--brand); flex-shrink: 0; font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 700; }
+  .exp-grid button .es { display: block; font-size: 10.5px; font-weight: 500; color: var(--ink-3); margin-top: 1px; }
+
+  /* Renewal banner (sidebar) */
+  .renewal-banner { display: flex; align-items: center; gap: 11px; width: 100%; padding: 11px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface-2); cursor: pointer; font-family: inherit; text-align: left; color: var(--ink); }
+  .renewal-banner:hover { background: var(--surface); box-shadow: var(--shadow-sm); }
+  .renewal-banner .rb-ic { width: 30px; height: 30px; border-radius: 6px; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; color: #fff; }
+  .renewal-banner.urgent { border-left: 3px solid var(--suspended); } .renewal-banner.urgent .rb-ic { background: var(--suspended); }
+  .renewal-banner.warn { border-left: 3px solid var(--pending); } .renewal-banner.warn .rb-ic { background: var(--pending); }
+  .renewal-banner.ok { border-left: 3px solid var(--active); } .renewal-banner.ok .rb-ic { background: var(--active); }
+  .renewal-banner .rb-main { flex: 1; display: flex; flex-direction: column; }
+  .renewal-banner .rb-main b { font-size: 13.5px; font-weight: 700; }
+  .renewal-banner .rb-sub { font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+  .renewal-banner .rb-go { color: var(--ink-3); font-size: 20px; line-height: 1; }
+
+  /* Expiry dashboard */
+  .exp-modal { width: 580px; }
+  .exp-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .exp-stat { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; border-top: 3px solid var(--border-strong); }
+  .exp-stat.urgent { border-top-color: var(--suspended); } .exp-stat.warn { border-top-color: var(--pending); } .exp-stat.lapsed { border-top-color: var(--expired); }
+  .exp-stat .es-n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .exp-stat.urgent .es-n { color: var(--suspended); } .exp-stat.warn .es-n { color: var(--pending); } .exp-stat.lapsed .es-n { color: var(--expired); }
+  .exp-stat .es-l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); font-weight: 700; margin-top: 5px; }
+  .exp-timeline-wrap { margin-bottom: 20px; }
+  .exp-timeline { position: relative; height: 52px; margin-top: 16px; }
+  .exp-timeline .tl-axis { position: absolute; left: 0; right: 0; top: 13px; height: 2px; background: var(--border-strong); }
+  .exp-timeline .tl-tick { position: absolute; top: 20px; transform: translateX(-50%); font-size: 9px; color: var(--ink-3); font-family: "IBM Plex Mono", monospace; white-space: nowrap; }
+  .exp-timeline .tl-tick::before { content: ""; position: absolute; top: -9px; left: 50%; width: 1px; height: 6px; background: var(--border-strong); }
+  .exp-timeline .tl-mark { position: absolute; top: 7px; width: 13px; height: 13px; border-radius: 50%; transform: translateX(-50%); border: 2px solid #fff; cursor: pointer; box-shadow: 0 1px 3px rgba(16,36,45,.28); transition: transform .1s; }
+  .exp-timeline .tl-mark.urgent { background: var(--suspended); } .exp-timeline .tl-mark.warn { background: var(--pending); } .exp-timeline .tl-mark.watch { background: #4f86a3; }
+  .exp-timeline .tl-mark:hover { transform: translateX(-50%) scale(1.35); z-index: 2; }
+  .exp-group { margin-bottom: 16px; }
+  .eg-head { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .eg-head .eg-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .eg-head.urgent .eg-dot { background: var(--suspended); } .eg-head.warn .eg-dot { background: var(--pending); } .eg-head.watch .eg-dot { background: #4f86a3; } .eg-head.lapsed .eg-dot { background: var(--expired); }
+  .eg-head .eg-n { margin-left: auto; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .exp-row { display: flex; align-items: center; gap: 11px; padding: 9px 4px; border-top: 1px solid var(--border); cursor: pointer; }
+  .exp-row:hover { background: var(--surface-2); }
+  .exp-row .pill { flex-shrink: 0; }
+  .exp-row .er-main { flex: 1; min-width: 0; }
+  .exp-row .er-num { font-size: 12px; font-weight: 600; }
+  .exp-row .er-holder { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-row .er-right { text-align: right; flex-shrink: 0; }
+  .exp-row .er-date { font-size: 12px; color: var(--ink); }
+  .exp-row .er-days { font-size: 11px; font-weight: 700; }
+  .er-days.urgent { color: var(--suspended); } .er-days.warn { color: var(--pending); } .er-days.watch { color: #4f86a3; } .er-days.lapsed { color: var(--expired); }
+
+  /* ============ MAP TOOLS (added) ============ */
+  .map-toolbar {
+    top: 128px; left: 16px;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .map-toolbar button {
+    width: 36px; height: 34px; border: none; background: var(--surface); cursor: pointer;
+    color: var(--ink-2); display: grid; place-items: center; border-bottom: 1px solid var(--border);
+  }
+  .map-toolbar button:last-child { border-bottom: none; }
+  .map-toolbar button:hover { background: var(--surface-2); color: var(--ink); }
+  .map-toolbar button.active { background: var(--brand); color: #fff; }
+
+  .basemap-switch {
+    top: 16px; left: 64px;
+    display: flex; gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 3px;
+  }
+  .basemap-switch button {
+    border: none; background: none; cursor: pointer; font-family: inherit;
+    font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+    padding: 6px 13px; border-radius: 3px;
+  }
+  .basemap-switch button:hover { background: var(--surface-2); }
+  .basemap-switch button.active { background: var(--brand); color: #fff; }
+
+  .filter-panel {
+    top: 60px; left: 64px;
+    width: 258px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    display: flex; flex-direction: column;
+    max-height: calc(100vh - 88px);
+    overflow: hidden;
+  }
+  .fp-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .fp-title { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--ink); }
+  .fp-meta { display: flex; align-items: center; gap: 4px; }
+  .fp-clear { border: none; background: none; color: var(--focus); cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 600; padding: 3px 7px; border-radius: 4px; display: none; }
+  .fp-clear:hover { background: var(--surface-2); }
+  .fp-clear.show { display: inline-block; }
+  .fp-collapse { border: none; background: none; cursor: pointer; color: var(--ink-3); width: 22px; height: 22px; border-radius: 4px; display: grid; place-items: center; line-height: 0; }
+  .fp-collapse:hover { background: var(--surface-2); color: var(--ink); }
+  .fp-collapse .chev { transition: transform .18s ease; }
+  .filter-panel.collapsed .fp-collapse .chev { transform: rotate(-90deg); }
+  .fp-body { overflow-y: auto; }
+  .fp-body::-webkit-scrollbar { width: 10px; }
+  .fp-body::-webkit-scrollbar-thumb { background: #cdd6da; border: 3px solid var(--surface); border-radius: 10px; }
+  .filter-panel.collapsed .fp-body { display: none; }
+
+  .coord-search {
+    top: 128px; left: 62px;
+    width: 214px;
+    z-index: 15;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 12px;
+    display: none;
+  }
+  .coord-search.show { display: block; }
+  .coord-search .cs-title {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700;
+    color: var(--ink-3); margin-bottom: 10px;
+  }
+  .cs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cs-grid label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 700; display: flex; flex-direction: column; gap: 4px; }
+  .cs-grid input {
+    height: 32px; border: 1px solid var(--border-strong); border-radius: var(--radius);
+    background: var(--surface-2); padding: 0 9px; font-size: 13px; color: var(--ink); outline: none; width: 100%;
+  }
+  .cs-grid input:focus { border-color: var(--focus); background: #fff; box-shadow: 0 0 0 3px rgba(31,111,134,.14); }
+  .cs-actions { display: flex; gap: 7px; margin-top: 10px; }
+  .cs-actions button { flex: 1; height: 32px; border-radius: var(--radius); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .cs-primary { background: var(--brand); color: #fff; border: 1px solid var(--brand); }
+  .cs-primary:hover { background: var(--brand-2); }
+  .cs-ghost { background: var(--surface); color: var(--ink-2); border: 1px solid var(--border-strong); }
+  .cs-ghost:hover { background: var(--surface-2); }
+  .cs-result { margin-top: 10px; font-size: 12px; color: var(--ink-2); line-height: 1.45; min-height: 1px; }
+  .cs-result b { color: var(--ink); }
+  .cs-hit { color: var(--active); font-weight: 700; }
+  .cs-miss { color: var(--ink-3); font-weight: 700; }
+
+  .coord-readout {
+    font-size: 10.5px; color: var(--ink); background: rgba(255,255,255,.9);
+    padding: 4px 8px; border-radius: 3px; border: 1px solid var(--border);
+    letter-spacing: .02em; white-space: nowrap;
+  }
+
+  .measure-badge {
+    top: 60px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: 100px; box-shadow: var(--shadow-md);
+    padding: 6px 8px 6px 14px; font-size: 12px; color: var(--ink-2);
+    display: none; align-items: center; gap: 8px;
+  }
+  .measure-badge.show { display: flex; }
+  .measure-badge b { color: var(--suspended); font-family: "IBM Plex Mono", monospace; }
+  .measure-badge button {
+    border: none; background: var(--surface-3); color: var(--ink-2); cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 100px;
+  }
+  .measure-badge button:hover { background: var(--border); }
+
+  .measure-line { fill: none; stroke: var(--suspended); stroke-width: 2.2; stroke-dasharray: 1 6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .measure-dot { fill: #fff; stroke: var(--suspended); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .pin-halo { fill: color-mix(in srgb, var(--focus) 20%, transparent); stroke: var(--focus); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+  .pin-core { fill: var(--focus); stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+
+  .relief-blob { fill: #b09661; }
+  #layer-relief { opacity: 0; transition: opacity .35s; pointer-events: none; }
+  .map.theme-terrain #layer-relief { opacity: .5; }
+
+  /* ============ BASEMAP THEMES ============ */
+  .map.theme-terrain { background: #cdd6c4; }
+  .map.theme-terrain #map-bg { fill: #cdd6c4; }
+  .map.theme-terrain .country { fill: #e9e2ce; stroke: #94886a; }
+  .map.theme-terrain .lake { fill: #a9cbdb; stroke: #7fa8bd; }
+  .map.theme-terrain .river { stroke: #86b3c6; }
+
+  .map.theme-minimal { background: #eef1f2; }
+  .map.theme-minimal #map-bg { fill: #eef1f2; }
+  .map.theme-minimal .country { fill: #f7f9f9; stroke: #b6c1c6; }
+  .map.theme-minimal .lake { fill: #e0eaef; stroke: #cbdae1; }
+  .map.theme-minimal .river { stroke: #cbdae1; }
+  .map.theme-minimal .graticule { opacity: .4; }
+  .map.theme-minimal .neighbor-label { fill: #b3c0c0; }
+  .map.theme-minimal #layer-occ { opacity: .4; }
+
+  @media (max-width: 880px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+    .sidebar { position: absolute; inset: 0 auto 0 0; width: 86%; max-width: 360px; box-shadow: var(--shadow-md); transform: translateX(0); }
+    .detail { width: 340px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <header class="app-header">
+      <svg class="emblem" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="18.5" fill="#0b2c37" stroke="#1d5567" stroke-width="1.4"/>
+        <circle cx="20" cy="20" r="13.5" fill="none" stroke="#5e93a1" stroke-width="1"/>
+        <path d="M20 9 L28 20 L20 31 L12 20 Z" fill="none" stroke="#d8e6ea" stroke-width="1.4"/>
+        <path d="M20 14.5 L24 20 L20 25.5 L16 20 Z" fill="#c98a2b"/>
+      </svg>
+      <div>
+        <div class="title">Zambia Mining Cadastre</div>
+        <div class="subtitle">Republic of Zambia · Ministry of Mines</div>
+      </div>
+    </header>
+
+    <div class="scroll-region">
+      <!-- Search -->
+      <div class="section">
+        <div class="search-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search" class="search-input" type="text" placeholder="Search licence no. or holder…" autocomplete="off" />
+          <button id="search-clear" class="search-clear" aria-label="Clear search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section">
+        <div class="stats-grid">
+          <div class="stat-tile"><div class="val" id="st-total">0</div><div class="lab">Total Licences</div></div>
+          <div class="stat-tile accent"><div class="val" id="st-active">0</div><div class="lab">Active</div></div>
+          <div class="stat-tile"><div class="val mono" id="st-ha">0</div><div class="lab">Total Hectares</div></div>
+          <div class="stat-tile pend"><div class="val" id="st-pending">0</div><div class="lab">Pending</div></div>
+        </div>
+      </div>
+
+      <!-- Renewal watch -->
+      <div class="section" id="renewal-section"></div>
+
+      <!-- List -->
+      <div class="list-head">
+        <span class="lh-title">Licences</span>
+        <span class="lh-count"><span id="result-count">0</span> results</span>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAP ===================== -->
+  <main class="map">
+    <svg id="map-svg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice" aria-label="National mining cadastre map of Zambia">
+      <defs>
+        <filter id="softblur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="16"/></filter>
+      </defs>
+      <rect id="map-bg" x="-2000" y="-2000" width="6000" height="6000" fill="#d7e0e1"/>
+      <g id="viewport">
+        <!-- Graticule -->
+        <g id="layer-grat"></g>
+        <!-- Basemap: country, rivers, lakes, neighbour labels (built in JS) -->
+        <g id="layer-base"></g>
+        <!-- Cadastral graticule grid (snap guide) -->
+        <g id="layer-cadgrid"></g>
+        <!-- Relief hillshade (terrain theme, built in JS) -->
+        <g id="layer-relief"></g>
+        <!-- Administrative (province) boundaries + labels -->
+        <g id="layer-admin"></g>
+        <!-- Parcels -->
+        <g id="layer-parcels"></g>
+        <g id="layer-parcel-labels"></g>
+        <!-- Mineral occurrences -->
+        <g id="layer-occ"></g>
+        <!-- Place markers (built in JS) -->
+        <g id="layer-places"></g>
+        <!-- Measurement + coordinate pin -->
+        <g id="layer-measure"></g>
+        <g id="layer-pin"></g>
+      </g>
+    </svg>
+
+    <!-- North arrow -->
+    <svg class="north" width="34" height="46" viewBox="0 0 34 46" aria-hidden="true">
+      <path d="M17 2 L25 30 L17 24 L9 30 Z" fill="#2a3b44" stroke="#fff" stroke-width="1"/>
+      <path d="M17 2 L17 24 L9 30 Z" fill="#5e7882"/>
+      <text x="17" y="44" text-anchor="middle" font-family="Public Sans" font-weight="700" font-size="12" fill="#2a3b44" paint-order="stroke" stroke="#fff" stroke-width="3">N</text>
+    </svg>
+
+    <!-- Zoom -->
+    <div class="map-overlay zoom-ctl">
+      <button id="zoom-in" aria-label="Zoom in">+</button>
+      <button id="zoom-out" aria-label="Zoom out">−</button>
+      <button id="zoom-reset" aria-label="Reset view" title="Reset view" style="font-size:14px;">⌂</button>
+    </div>
+
+    <!-- Map tools -->
+    <div class="map-overlay map-toolbar">
+      <button id="tool-measure" title="Measure distance" aria-label="Measure distance">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16 16 3l5 5L8 21z"/><path d="M8 8l2 2M11 5l2 2M5 11l2 2"/></svg>
+      </button>
+      <button id="tool-area" title="Measure area" aria-label="Measure area">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 7 12 3l8 4-2 13H6z"/><circle cx="4" cy="7" r="1.6" fill="currentColor"/><circle cx="20" cy="7" r="1.6" fill="currentColor"/><circle cx="12" cy="3" r="1.6" fill="currentColor"/><circle cx="6" cy="20" r="1.6" fill="currentColor"/><circle cx="18" cy="20" r="1.6" fill="currentColor"/></svg>
+      </button>
+      <button id="tool-sketch" title="Sketch application area &mdash; checks for conflicts" aria-label="Sketch application area">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      </button>
+      <button id="tool-rect" title="Draw rectangular block" aria-label="Draw rectangular block">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-dasharray="3.5 3"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
+      </button>
+      <button id="tool-marker" title="Drop survey markers" aria-label="Drop survey markers">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+      </button>
+      <button id="tool-buffer" title="Buffer / setback zone" aria-label="Buffer zone">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button id="tool-snap" title="Snap to cadastral grid" aria-label="Snap to cadastral grid">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+      </button>
+      <div class="tb-div"></div>
+      <button id="tool-coord" title="Locate coordinates" aria-label="Locate coordinates">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button id="tool-clear" title="Clear all drawings" aria-label="Clear all drawings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>
+      <button id="tool-fs" title="Fullscreen" aria-label="Toggle fullscreen">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V4a1 1 0 0 1 1-1h5M21 9V4a1 1 0 0 0-1-1h-5M3 15v5a1 1 0 0 0 1 1h5M21 15v5a1 1 0 0 1-1 1h-5"/></svg>
+      </button>
+    </div>
+
+    <!-- Basemap switch -->
+    <div class="map-overlay basemap-switch">
+      <button data-theme="cadastre" class="active">Cadastre</button>
+      <button data-theme="terrain">Terrain</button>
+      <button data-theme="minimal">Minimal</button>
+    </div>
+
+    <!-- Floating filters -->
+    <div class="map-overlay filter-panel" id="filter-panel">
+      <div class="fp-head">
+        <span class="fp-title">Filters</span>
+        <div class="fp-meta">
+          <button class="fp-clear" id="fp-clear">Clear</button>
+          <button class="fp-collapse" id="fp-collapse" aria-label="Collapse filters">
+            <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="fp-body" id="filters"></div>
+    </div>
+
+    <!-- Coordinate search -->
+    <div class="map-overlay coord-search" id="coord-search">
+      <div class="cs-title">Locate coordinates</div>
+      <div class="cs-grid">
+        <label>Lat °S<input id="cs-lat" class="mono" type="text" inputmode="decimal" placeholder="15.42" /></label>
+        <label>Lon °E<input id="cs-lon" class="mono" type="text" inputmode="decimal" placeholder="28.28" /></label>
+      </div>
+      <div class="cs-actions">
+        <button id="cs-go" class="cs-primary">Locate</button>
+        <button id="cs-clear" class="cs-ghost">Clear</button>
+      </div>
+      <div class="cs-result" id="cs-result"></div>
+    </div>
+
+    <!-- Drawing / measurement HUD -->
+    <div class="map-overlay draw-hud" id="draw-hud">
+      <div class="dh-top">
+        <span class="dh-tool" id="dh-tool">Measure</span>
+        <button class="dh-x" id="dh-close" aria-label="Close tool">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="dh-readout" id="dh-readout"></div>
+      <div class="dh-conflict" id="dh-conflict" style="display:none"></div>
+      <div class="dh-actions" id="dh-actions"></div>
+    </div>
+
+    <!-- Layer toggle -->
+    <div class="map-overlay layer-toggle">
+      <div class="lt-head">Map Layers</div>
+      <div class="lt-body">
+        <label class="lt-row">
+          <input type="checkbox" data-layer="parcels" checked />
+          <span class="box" style="width:15px;height:15px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="lt-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#103a48" stroke-width="1.6"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3z"/></svg></span>
+          <span class="clabel">Licences</span>
+        </label>
+        <label class="lt-row">
+          <input type="checkbox" data-layer="occ" />
+          <span class="box" style="width:15px;height:15px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="lt-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b4a16" stroke-width="1.8"><path d="M12 3v18M3 12h18"/></svg></span>
+          <span class="clabel">Mineral Occurrences</span>
+        </label>
+        <label class="lt-row">
+          <input type="checkbox" data-layer="admin" checked />
+          <span class="box" style="width:15px;height:15px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="lt-icon"><svg width="16" height="12" viewBox="0 0 24 18" fill="none" stroke="#6a5a78" stroke-width="1.8" stroke-dasharray="4 3"><rect x="2" y="2" width="20" height="14"/></svg></span>
+          <span class="clabel">Provincial Boundaries</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="map-overlay legend" id="legend">
+      <div class="legend-top">
+        <span class="lg-title" id="legend-title">Status</span>
+        <select id="color-by" class="legend-select" aria-label="Colour parcels by">
+          <option value="status">Status</option>
+          <option value="mineral">Mineral</option>
+          <option value="type">Type</option>
+          <option value="expiry">Expiry</option>
+        </select>
+      </div>
+      <div id="legend-rows"></div>
+    </div>
+
+    <!-- Map meta -->
+    <div class="map-overlay map-meta">
+      <div class="coord-readout mono" id="coord-readout">Move cursor over map</div>
+      <div class="scalebar">
+        <div class="bar"><div></div><div></div><div></div><div></div></div>
+        <div class="ticks"><span>0</span><span id="scale-mid">100</span><span id="scale-max">200 km</span></div>
+      </div>
+      <div class="crs-note">EPSG:4326 · WGS 84 (geographic)</div>
+    </div>
+
+    <!-- Map popup (anchored to selected parcel) -->
+    <div class="map-popup" id="popup">
+      <div class="popup-head">
+        <span class="lic-num mono" id="pop-num"></span>
+        <span class="pill" id="pop-pill"><span class="dot"></span><span id="pop-status"></span></span>
+        <button class="popup-close" id="popup-close" aria-label="Close popup">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="popup-holder" id="pop-holder"></div>
+      <div class="popup-meta lic-meta" id="pop-meta"></div>
+      <div class="lic-region popup-region" id="pop-region"></div>
+      <div class="popup-foot">
+        <button class="popup-link" id="popup-full">View full record
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="popup-tail"></div>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="scrim" id="scrim"></div>
+    <div class="detail" id="detail">
+      <div class="detail-head" id="detail-head" data-status="Active">
+        <div>
+          <div class="dh-eyebrow">Licence Record</div>
+          <div class="dh-num mono" id="d-num">—</div>
+        </div>
+        <button class="detail-close" id="detail-close" aria-label="Close panel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="detail-body">
+        <div class="holder-block">
+          <div class="hb-name" id="d-holder">—</div>
+          <span class="pill" id="d-pill"><span class="dot"></span><span id="d-pill-text">—</span></span>
+        </div>
+        <dl class="dl">
+          <div class="cell"><dt>Licence Type</dt><dd id="d-type">—</dd></div>
+          <div class="cell"><dt>Primary Mineral</dt><dd id="d-mineral">—</dd></div>
+          <div class="cell"><dt>Area</dt><dd class="big mono" id="d-area">—</dd></div>
+          <div class="cell"><dt>Registry ID</dt><dd class="mono" id="d-regid">—</dd></div>
+          <div class="cell"><dt>Issue Date</dt><dd class="mono" id="d-issue">—</dd></div>
+          <div class="cell"><dt>Expiry Date</dt><dd class="mono" id="d-expiry">—</dd></div>
+          <div class="cell full"><dt>District</dt><dd id="d-district">—</dd></div>
+        </dl>
+        <div class="term-bar">
+          <div class="tb-title"><span>Licence Term</span><span id="d-term-state">—</span></div>
+          <div class="term-track"><div class="term-fill" id="d-term-fill"></div></div>
+          <div class="term-dates"><span class="mono" id="d-term-from">—</span><span class="mono" id="d-term-to">—</span></div>
+        </div>
+        <div class="fee-box">
+          <div class="fee-top"><span class="fee-label">Annual area charge</span><span class="fee-note" id="d-fee-basis">—</span></div>
+          <div class="fee-amt mono" id="d-fee">—</div>
+        </div>
+        <div class="hist-block">
+          <div class="hist-title">Licence history</div>
+          <div class="hist-list" id="d-history"></div>
+        </div>
+      </div>
+      <div class="detail-foot">
+        <button class="btn btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Zoom to parcel</button>
+        <button class="btn btn-ghost" id="btn-docs"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>Documents</button>
+      </div>
+    </div>
+
+    <!-- Documents / export modal -->
+    <div class="modal-scrim" id="doc-scrim"></div>
+    <div class="modal" id="doc-modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="mh-eyebrow">Records &amp; export</div>
+          <div class="mh-title" id="dm-title">—</div>
+        </div>
+        <button class="modal-close" id="dm-close" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-sec">
+          <div class="ms-label">Documents on file</div>
+          <div class="doc-list" id="dm-docs"></div>
+        </div>
+        <div class="modal-sec">
+          <div class="ms-label">Export geometry &amp; records</div>
+          <div class="exp-grid" id="dm-exports"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Expiry &amp; renewals dashboard -->
+    <div class="modal-scrim" id="exp-scrim"></div>
+    <div class="modal exp-modal" id="exp-modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="mh-eyebrow">Compliance</div>
+          <div class="mh-title">Expiry &amp; renewals</div>
+        </div>
+        <button class="modal-close" id="ex-close" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="exp-summary" id="ex-summary"></div>
+        <div class="exp-timeline-wrap">
+          <div class="ms-label">Expiries over the next 12 months</div>
+          <div class="exp-timeline" id="ex-timeline"></div>
+        </div>
+        <div id="ex-groups"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+//= = = = = = = = = = = = = = = STATUS / DOMAINS = = = = = = = = = = = = = = =
+const STATUS = {
+  Active:        { color: "#2f8a63" },
+  Pending:       { color: "#bf8420" },
+  Expired:       { color: "#8a929b" },
+  Suspended:     { color: "#b1483d" },
+  Relinquished:  { color: "#5d7a93" },
+};
+const TYPES = ["Large-Scale Mining","Small-Scale Mining","Exploration","Artisanal","Mineral Processing"];
+const MINERALS = ["Copper","Cobalt","Gold","Emerald","Manganese","Lead/Zinc"];
+// Illustrative annual area charge (ZMW / ha / year) by licence type
+const FEE_RATES = { "Large-Scale Mining":65, "Small-Scale Mining":40, "Exploration":12, "Artisanal":8, "Mineral Processing":30 };
+function feeFor(type, ha){ return Math.round((FEE_RATES[type]||20) * ha); }
+function fmtK(n){ return "K\u00a0" + fmt(n); }
+
+//= = = = = = = = = = = = = = = COLOUR SCHEMES = = = = = = = = = = = = = = =
+const MIN_COLORS  = { "Copper":"oklch(0.62 0.13 45)", "Cobalt":"oklch(0.6 0.13 255)", "Gold":"oklch(0.72 0.13 95)", "Emerald":"oklch(0.62 0.13 158)", "Manganese":"oklch(0.55 0.13 320)", "Lead/Zinc":"oklch(0.6 0.13 20)" };
+const TYPE_COLORS = { "Large-Scale Mining":"oklch(0.55 0.11 25)", "Small-Scale Mining":"oklch(0.62 0.11 85)", "Exploration":"oklch(0.58 0.11 152)", "Artisanal":"oklch(0.58 0.11 218)", "Mineral Processing":"oklch(0.52 0.11 300)" };
+const EXPIRY_ORDER  = ["Lapsed","\u226490 days","\u22641 year","1\u20135 years","5+ years"];
+const EXPIRY_COLORS = { "Lapsed":"#8a929b", "\u226490 days":"#b1483d", "\u22641 year":"#bf8420", "1\u20135 years":"#4f86a3", "5+ years":"#2f8a63" };
+function expiryBucket(l){
+  const end = new Date(l.expiry).getTime(), now = Date.now();
+  if (l.status==="Expired" || now > end) return "Lapsed";
+  const d = (end - now)/86400000;
+  if (d <= 90) return "\u226490 days";
+  if (d <= 365) return "\u22641 year";
+  if (d <= 365*5) return "1\u20135 years";
+  return "5+ years";
+}
+const COLOR_SCHEMES = {
+  status:  { title:"Status",        field:"status",  get:l=>l.status,  order:Object.keys(STATUS), color:v=>STATUS[v].color },
+  mineral: { title:"Mineral",       field:"mineral", get:l=>l.mineral, order:MINERALS,            color:v=>MIN_COLORS[v] },
+  type:    { title:"Licence type",  field:"type",    get:l=>l.type,    order:TYPES,               color:v=>TYPE_COLORS[v] },
+  expiry:  { title:"Expiry horizon",field:null,      get:expiryBucket, order:EXPIRY_ORDER,        color:v=>EXPIRY_COLORS[v] },
+};
+let colorMode = "status";
+function parcelColor(l){ const s = COLOR_SCHEMES[colorMode]; return s.color(s.get(l)); }
+function recolorParcels(){
+  LICENSES.forEach(l => { const c = parcelColor(l); const p = $(`.parcel[data-num="${l.num}"]`); if (p) p.style.cssText = `--ps:${c};--pf:color-mix(in srgb, ${c} 40%, transparent)`; });
+}
+
+//= = = = = = = = = = = = = = = PROJECTION (WGS 84 geographic) = = = = = = = = = = = = = = =
+const SX = 82, SY = 82, OX = 55, OY = 70;        // px per degree (equirectangular)
+function proj(lon, lat){ return [ (lon - 21.5) * SX + OX, (-lat - 8.0) * SY + OY ]; }
+const KM_PER_DEG = 111;                           // approx at Zambia latitudes
+const GRID_DEG = 1/60;                             // base graticular cadastre unit = 1 arc-minute
+function geoPath(coords, close){
+  return coords.map((c,i)=>{ const [x,y]=proj(c[0],c[1]); return (i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1); }).join(" ") + (close?" Z":"");
+}
+
+//= = = = = = = = = = = = = = = NATIONAL GEOMETRY = = = = = = = = = = = = = = =
+const ZAMBIA = [
+ [32.759375,-9.230599],[33.231388,-9.676722],[33.485688,-10.525559],[33.31531,-10.79655],
+ [33.114289,-11.607198],[33.306422,-12.435778],[32.991764,-12.783871],[32.688165,-13.712858],
+ [33.214025,-13.97186],[30.179481,-14.796099],[30.274256,-15.507787],[29.516834,-15.644678],
+ [28.947463,-16.043051],[28.825869,-16.389749],[28.467906,-16.4684],[27.598243,-17.290831],
+ [27.044427,-17.938026],[26.706773,-17.961229],[26.381935,-17.846042],[25.264226,-17.73654],
+ [25.084443,-17.661816],[25.07695,-17.578823],[24.682349,-17.353411],[24.033862,-17.295843],
+ [23.215048,-17.523116],[22.562478,-16.898451],[21.887843,-16.08031],[21.933886,-12.898437],
+ [24.016137,-12.911046],[23.930922,-12.565848],[24.079905,-12.191297],[23.904154,-11.722282],
+ [24.017894,-11.237298],[23.912215,-10.926826],[24.257155,-10.951993],[24.314516,-11.262826],
+ [24.78317,-11.238694],[25.418118,-11.330936],[25.75231,-11.784965],[26.553088,-11.92444],
+ [27.16442,-11.608748],[27.388799,-12.132747],[28.155109,-12.272481],[28.523562,-12.698604],
+ [28.934286,-13.248958],[29.699614,-13.257227],[29.616001,-12.178895],[29.341548,-12.360744],
+ [28.642417,-11.971569],[28.372253,-11.793647],[28.49607,-10.789884],[28.673682,-9.605925],
+ [28.449871,-9.164918],[28.734867,-8.526559],[29.002912,-8.407032],[30.346086,-8.238257],
+ [30.740015,-8.340007],[31.157751,-8.594579],[31.556348,-8.762049],[32.191865,-8.930359]
+];
+const ZAMBEZI = [[24.0,-11.4],[23.5,-13.0],[23.0,-14.6],[23.1,-15.3],[23.4,-16.5],[24.2,-17.4],[25.3,-17.85],[26.7,-16.3],[27.8,-16.5],[28.9,-15.85],[30.4,-15.6]];
+const KAFUE   = [[27.2,-12.4],[26.6,-13.6],[26.0,-14.8],[26.6,-15.6],[27.6,-15.8],[28.9,-15.85]];
+const LUANGWA = [[32.2,-10.8],[31.6,-12.2],[31.1,-13.4],[30.8,-14.6],[30.4,-15.6]];
+const LAKES = [ // lon, lat, rx(px), ry(px)
+ [28.0,-16.5,42,8], [29.8,-11.2,26,20], [28.7,-9.1,12,26], [30.95,-8.4,22,30]
+];
+const NEIGHBORS = [
+ [26.5,-9.3,"DEM. REP. OF THE CONGO"], [21.6,-13.5,"ANGOLA"], [31.8,-8.6,"TANZANIA"],
+ [33.9,-12.8,"MALAWI"], [32.0,-16.0,"MOZAMBIQUE"], [28.0,-17.4,"ZIMBABWE"],
+ [24.6,-18.1,"BOTSWANA"], [22.8,-17.7,"NAMIBIA"]
+];
+const PROVINCES = [
+ [24.8,-12.6,"NORTH-WESTERN"], [28.2,-12.0,"COPPERBELT"], [29.4,-11.3,"LUAPULA"],
+ [31.0,-9.8,"NORTHERN"], [31.9,-11.7,"MUCHINGA"], [30.0,-13.8,"CENTRAL"],
+ [32.4,-13.1,"EASTERN"], [28.9,-15.6,"LUSAKA"], [27.0,-16.4,"SOUTHERN"], [23.2,-15.0,"WESTERN"]
+];
+const PROV_LINES = [
+ [[24.3,-11.0],[24.5,-13.0],[24.6,-15.3],[24.3,-17.3]],
+ [[24.6,-13.6],[26.4,-13.2],[27.0,-12.3]],
+ [[27.0,-12.3],[27.3,-13.4],[28.9,-13.4],[29.2,-12.5]],
+ [[24.6,-15.3],[27.0,-15.0],[29.0,-15.2],[30.4,-15.6]],
+ [[28.0,-15.0],[28.2,-15.95]],
+ [[29.2,-12.5],[29.0,-11.0],[28.4,-9.6]],
+ [[30.5,-11.0],[31.0,-12.5],[31.4,-14.0],[31.3,-14.6]],
+ [[30.5,-11.0],[29.2,-12.5]],
+ [[31.0,-9.6],[30.5,-11.0]]
+];
+const CITIES = [ // lon, lat, name, rank (2 capital, 1 major, 0 town)
+ [28.28,-15.42,"Lusaka",2], [28.21,-12.82,"Kitwe",1], [28.64,-12.97,"Ndola",1],
+ [28.45,-14.45,"Kabwe",1], [26.39,-12.17,"Solwezi",0], [25.86,-17.85,"Livingstone",0],
+ [32.65,-13.64,"Chipata",0], [31.18,-10.21,"Kasama",0], [23.13,-15.25,"Mongu",0],
+ [28.89,-11.20,"Mansa",0], [31.33,-8.77,"Mpulungu",0]
+];
+const OCCURRENCES = [ // lon, lat, symbol
+ [26.0,-12.4,"Cu"],[28.3,-12.9,"Co"],[25.3,-13.0,"Cu"],[29.5,-13.8,"Mn"],
+ [27.0,-14.6,"Au"],[31.5,-13.2,"Au"],[30.2,-14.0,"Pb"],[24.5,-14.5,"Em"],
+ [28.6,-15.6,"Cu"],[26.5,-16.0,"Mn"],[32.0,-12.0,"Au"],[29.0,-11.0,"Co"],
+ [23.5,-16.0,"Cu"],[30.8,-10.5,"Mn"]
+];
+
+//= = = = = = = = = = = = = = = LICENCE DATA = = = = = = = = = = = = = = =
+// parcel `pts` are in 1200x900 map space, clustered onto real mining districts.
+const LICENSES = [
+  { num:"LSM-2024-0147", holder:"Kabwe Copper Resources Ltd", status:"Active",       type:"Large-Scale Mining",  mineral:"Copper",    ha:2450, issue:"2024-03-12", expiry:"2049-03-11", district:"Chingola, Copperbelt Province",     pts:"560,430 615,425 620,470 565,478" },
+  { num:"SSM-2023-0892", holder:"Lukanga Minerals",            status:"Active",       type:"Small-Scale Mining",  mineral:"Cobalt",    ha:320,  issue:"2023-07-04", expiry:"2033-07-03", district:"Kitwe, Copperbelt Province",        pts:"615,425 660,432 658,475 620,470" },
+  { num:"EPL-2024-0231", holder:"Mkushi Exploration Co.",      status:"Pending",      type:"Exploration",         mineral:"Gold",      ha:5600, issue:"2024-09-22", expiry:"2028-09-21", district:"Mkushi, Central Province",          pts:"672,536 722,540 726,580 676,576" },
+  { num:"ASM-2022-1045", holder:"Broken Hill Artisanal Coop",  status:"Active",       type:"Artisanal",           mineral:"Emerald",   ha:45,   issue:"2022-05-18", expiry:"2027-05-17", district:"Lufwanyama, Copperbelt Province",   pts:"565,478 620,470 625,512 570,518" },
+  { num:"LSM-2021-0067", holder:"Zambezi Metals Plc",          status:"Expired",      type:"Large-Scale Mining",  mineral:"Lead/Zinc", ha:3100, issue:"2011-02-09", expiry:"2025-02-08", district:"Kabwe, Central Province",           pts:"600,578 650,573 654,616 604,622" },
+  { num:"MPL-2024-0012", holder:"Central Processing Ltd",      status:"Active",       type:"Mineral Processing",  mineral:"Copper",    ha:180,  issue:"2024-01-30", expiry:"2034-01-29", district:"Ndola, Copperbelt Province",        pts:"620,470 658,475 665,515 625,512" },
+  { num:"EPL-2023-0556", holder:"Kapiri Resources Ltd",        status:"Suspended",    type:"Exploration",         mineral:"Manganese", ha:4200, issue:"2023-11-14", expiry:"2027-11-13", district:"Kapiri Mposhi, Central Province",   pts:"618,540 668,536 672,573 622,576" },
+  { num:"SSM-2024-0334", holder:"Ndola West Mining",           status:"Pending",      type:"Small-Scale Mining",  mineral:"Gold",      ha:410,  issue:"2024-12-02", expiry:"2034-12-01", district:"Ndola, Copperbelt Province",        pts:"658,475 698,470 705,508 665,515" },
+  { num:"LSM-2020-0023", holder:"Lufwanyama Holdings",         status:"Relinquished", type:"Large-Scale Mining",  mineral:"Copper",    ha:2800, issue:"2010-08-11", expiry:"2035-08-10", district:"Solwezi, North-Western Province",   pts:"385,378 440,372 448,418 392,425" },
+  { num:"ASM-2023-0778", holder:"Mulungushi Gems",             status:"Active",       type:"Artisanal",           mineral:"Emerald",   ha:60,   issue:"2023-04-27", expiry:"2028-04-26", district:"Lufwanyama, Copperbelt Province",   pts:"522,452 565,446 570,490 527,496" },
+  { num:"EPL-2024-0445", holder:"Great North Exploration",     status:"Active",       type:"Exploration",         mineral:"Cobalt",    ha:6100, issue:"2024-06-15", expiry:"2028-06-14", district:"Kalumbila, North-Western Province", pts:"440,372 495,380 498,425 448,418" },
+  { num:"SSM-2022-0611", holder:"Chibombo Minerals Ltd",       status:"Expired",      type:"Small-Scale Mining",  mineral:"Manganese", ha:290,  issue:"2012-10-03", expiry:"2024-10-02", district:"Chibombo, Central Province",        pts:"566,628 616,624 620,664 570,668" },
+  { num:"LSM-2023-0198", holder:"Kabwe Copper Resources Ltd",  status:"Pending",      type:"Large-Scale Mining",  mineral:"Lead/Zinc", ha:1950, issue:"2023-08-19", expiry:"2048-08-18", district:"Kabwe, Central Province",           pts:"554,582 600,578 604,622 558,626" },
+  { num:"MPL-2023-0089", holder:"Lukanga Minerals",            status:"Active",       type:"Mineral Processing",  mineral:"Cobalt",    ha:130,  issue:"2023-02-21", expiry:"2033-02-20", district:"Kalulushi, Copperbelt Province",    pts:"660,432 700,438 698,470 658,475" },
+  { num:"EPL-2021-0302", holder:"Mkushi Exploration Co.",      status:"Suspended",    type:"Exploration",         mineral:"Gold",      ha:3750, issue:"2021-09-08", expiry:"2025-09-07", district:"Chipata, Eastern Province",         pts:"918,520 968,524 972,566 922,562" },
+];
+
+//= = = = = = = = = = = = = = = STATE = = = = = = = = = = = = = = =
+const state = { search:"", status:new Set(), type:new Set(), mineral:new Set(), selected:null };
+
+//= = = = = = = = = = = = = = = HELPERS = = = = = = = = = = = = = = =
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const fmt = n => n.toLocaleString("en-US");
+const fmtDate = iso => {
+  const [y,m,d] = iso.split("-");
+  const mn = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${d} ${mn[+m-1]} ${y}`;
+};
+function centroid(pts){
+  const a = pts.split(" ").map(p=>p.split(",").map(Number));
+  const c = a.reduce((s,[x,y])=>[s[0]+x,s[1]+y],[0,0]);
+  return [c[0]/a.length, c[1]/a.length];
+}
+function passesFilters(l){
+  if (state.status.size && !state.status.has(l.status)) return false;
+  if (state.type.size && !state.type.has(l.type)) return false;
+  if (state.mineral.size && !state.mineral.has(l.mineral)) return false;
+  if (state.search){
+    const q = state.search.toLowerCase();
+    if (!l.num.toLowerCase().includes(q) && !l.holder.toLowerCase().includes(q)) return false;
+  }
+  return true;
+}
+
+//= = = = = = = = = = = = = = = STATS = = = = = = = = = = = = = = =
+function renderStats(){
+  $("#st-total").textContent = LICENSES.length;
+  $("#st-active").textContent = LICENSES.filter(l=>l.status==="Active").length;
+  $("#st-pending").textContent = LICENSES.filter(l=>l.status==="Pending").length;
+  $("#st-ha").textContent = fmt(LICENSES.reduce((s,l)=>s+l.ha,0));
+}
+
+//= = = = = = = = = = = = = = = FILTERS = = = = = = = = = = = = = = =
+function countBy(field, value){ return LICENSES.filter(l=>l[field]===value).length; }
+function buildFilters(){
+  const groups = [
+    { key:"status",  title:"Status",       field:"status",  items:Object.keys(STATUS), swatch:true },
+    { key:"type",    title:"Licence Type", field:"type",    items:TYPES },
+    { key:"mineral", title:"Mineral",      field:"mineral", items:MINERALS },
+  ];
+  const wrap = $("#filters");
+  wrap.innerHTML = groups.map(g => `
+    <div class="filter-group" data-group="${g.key}">
+      <button class="filter-head" data-toggle="${g.key}">
+        <span class="ftitle">${g.title}</span>
+        <span class="meta">
+          <span class="filter-count" data-fc="${g.key}"></span>
+          <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="filter-body">
+        ${g.items.map(it => `
+          <label class="check">
+            <input type="checkbox" data-field="${g.field}" value="${it}" />
+            <span class="box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            ${g.swatch ? `<span class="swatch" style="background:${STATUS[it].color}"></span>` : ``}
+            <span class="clabel">${it}</span>
+            <span class="ccount">${countBy(g.field, it)}</span>
+          </label>
+        `).join("")}
+      </div>
+    </div>
+  `).join("");
+  $$(".filter-head", wrap).forEach(h => h.addEventListener("click", () => h.closest(".filter-group").classList.toggle("collapsed")));
+  $$('input[type=checkbox]', wrap).forEach(cb => cb.addEventListener("change", () => {
+    const set = state[cb.dataset.field];
+    cb.checked ? set.add(cb.value) : set.delete(cb.value);
+    update();
+  }));
+}
+function updateFilterCounts(){
+  ["status","type","mineral"].forEach(k => {
+    const n = state[k].size;
+    $(`[data-fc="${k}"]`).textContent = n ? `${n} selected` : "";
+  });
+}
+
+//= = = = = = = = = = = = = = = LEGEND = = = = = = = = = = = = = = =
+function buildLegend(){
+  const s = COLOR_SCHEMES[colorMode];
+  const title = $("#legend-title"); if (title) title.textContent = s.title;
+  const counts = {};
+  LICENSES.forEach(l => { const v = s.get(l); counts[v] = (counts[v]||0) + 1; });
+  $("#legend-rows").innerHTML = s.order.map(name => `
+    <div class="legend-row" data-legend="${name}" style="--lc:${s.color(name)}">
+      <span class="lg-sw"></span>
+      <span class="lg-label">${name}</span>
+      <span class="lg-n">${counts[name]||0}</span>
+    </div>
+  `).join("");
+  $$("#legend-rows .legend-row").forEach(r => r.addEventListener("click", () => {
+    if (!s.field) return;
+    const name = r.dataset.legend;
+    const set = state[s.field];
+    set.has(name) ? set.delete(name) : set.add(name);
+    const cb = $(`input[data-field="${s.field}"][value="${name}"]`);
+    if (cb) cb.checked = set.has(name);
+    update();
+  }));
+}
+
+//= = = = = = = = = = = = = = = SVG BUILD = = = = = = = = = = = = = = =
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){ const e = document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+function buildBasemap(){
+  const g = $("#layer-base");
+  g.appendChild(el("path", { class:"country", d: geoPath(ZAMBIA, true) }));
+  LAKES.forEach(([lon,lat,rx,ry]) => { const [x,y]=proj(lon,lat); g.appendChild(el("ellipse",{class:"lake",cx:x,cy:y,rx,ry})); });
+  [ZAMBEZI, KAFUE, LUANGWA].forEach(r => g.appendChild(el("path",{class:"river",d:geoPath(r,false)})));
+  NEIGHBORS.forEach(([lon,lat,name]) => { const [x,y]=proj(lon,lat); const t=el("text",{class:"neighbor-label",x,y}); t.textContent=name; g.appendChild(t); });
+}
+
+function buildProvinces(){
+  const g = $("#layer-admin");
+  PROV_LINES.forEach(line => g.appendChild(el("path",{class:"prov-line",d:geoPath(line,false)})));
+  PROVINCES.forEach(([lon,lat,name]) => { const [x,y]=proj(lon,lat); const t=el("text",{class:"prov-label",x,y}); t.textContent=name; g.appendChild(t); });
+}
+
+function buildPlaces(){
+  const g = $("#layer-places");
+  CITIES.forEach(([lon,lat,name,rank]) => {
+    const [x,y] = proj(lon,lat);
+    if (rank === 2){
+      g.appendChild(el("rect",{class:"town-dot",x:x-5,y:y-5,width:10,height:10,rx:1.5}));
+    } else {
+      g.appendChild(el("circle",{class: rank ? "town-dot" : "place-dot", cx:x, cy:y, r: rank ? 4 : 3.2}));
+    }
+    const t = el("text",{ class: rank ? "town-label" : "place-label", x: x + (rank?9:8), y: y + (rank?4:3) });
+    t.textContent = name;
+    g.appendChild(t);
+  });
+}
+
+function buildGraticule(){
+  const g = $("#layer-grat");
+  [22,24,26,28,30,32].forEach(lon => {
+    const x = proj(lon,0)[0];
+    g.appendChild(el("line",{class:"graticule",x1:x,y1:30,x2:x,y2:900}));
+    const t = el("text",{class:"grat-label",x:x+3,y:52}); t.textContent = lon+"°E"; g.appendChild(t);
+  });
+  [-9,-11,-13,-15,-17].forEach(lat => {
+    const y = proj(0,lat)[1];
+    g.appendChild(el("line",{class:"graticule",x1:0,y1:y,x2:1200,y2:y}));
+    const t = el("text",{class:"grat-label",x:6,y:y-4}); t.textContent = Math.abs(lat)+"°S"; g.appendChild(t);
+  });
+}
+
+function buildParcels(){
+  const gp = $("#layer-parcels");
+  const gl = $("#layer-parcel-labels");
+  LICENSES.forEach(l => {
+    const color = STATUS[l.status].color;
+    const poly = el("polygon", {
+      class:"parcel", points:l.pts, "data-num":l.num,
+      style:`--ps:${color};--pf:color-mix(in srgb, ${color} 40%, transparent)`
+    });
+    poly.addEventListener("click", e => { e.stopPropagation(); if (draw.mode) { handleDrawClick(e); return; } select(l.num, true); });
+    poly.addEventListener("mouseenter", () => $(`.parcel-label[data-num="${l.num}"]`)?.classList.add("show"));
+    poly.addEventListener("mouseleave", () => { if (state.selected !== l.num) $(`.parcel-label[data-num="${l.num}"]`)?.classList.remove("show"); });
+    gp.appendChild(poly);
+
+    const [cx,cy] = centroid(l.pts);
+    const t = el("text",{class:"parcel-label","data-num":l.num,x:cx,y:cy+3});
+    t.textContent = l.num;
+    gl.appendChild(t);
+  });
+}
+
+function buildOccurrences(){
+  const g = $("#layer-occ");
+  OCCURRENCES.forEach(([lon,lat,m]) => {
+    const [x,y] = proj(lon,lat);
+    const grp = el("g",{});
+    grp.appendChild(el("line",{class:"occ-mark",x1:x-5,y1:y,x2:x+5,y2:y}));
+    grp.appendChild(el("line",{class:"occ-mark",x1:x,y1:y-5,x2:x,y2:y+5}));
+    const t = el("text",{x:x+8,y:y+3,"font-family":"IBM Plex Mono","font-size":"9","fill":"#6b4a16","font-weight":"600"});
+    t.textContent = m;
+    grp.appendChild(t);
+    g.appendChild(grp);
+  });
+}
+
+//= = = = = = = = = = = = = = = LIST = = = = = = = = = = = = = = =
+function renderList(){
+  const results = LICENSES.filter(passesFilters);
+  $("#result-count").textContent = results.length;
+  const list = $("#list");
+  if (!results.length){
+    list.innerHTML = `<div class="empty-state">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <div>No licences match your filters.</div>
+      <button class="link-btn" id="clear-all">Clear all filters</button>
+    </div>`;
+    $("#clear-all")?.addEventListener("click", clearAll);
+    return;
+  }
+  list.innerHTML = results.map(l => `
+    <div class="lic-card" data-num="${l.num}" data-status="${l.status}">
+      <div class="lic-row1">
+        <span class="lic-num mono">${l.num}</span>
+        <span class="pill"><span class="dot"></span>${l.status}</span>
+      </div>
+      <div class="lic-holder">${l.holder}</div>
+      <div class="lic-meta">
+        <span class="tag">${l.type}</span>
+        <span class="tag">${l.mineral}</span>
+        <span class="tag mono">${fmt(l.ha)} ha</span>
+      </div>
+      <div class="lic-region">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.2"/></svg>
+        ${l.district}
+      </div>
+    </div>
+  `).join("");
+  $$(".lic-card", list).forEach(c => c.addEventListener("click", () => select(c.dataset.num, false)));
+  syncSelectionUI();
+}
+
+//= = = = = = = = = = = = = = = SELECTION + DETAIL = = = = = = = = = = = = = = =
+function select(num, fromMap){
+  state.selected = num;
+  syncSelectionUI();
+  if (!fromMap) centerParcel(num);
+  showPopup(num);
+}
+function centerParcel(num){
+  const l = LICENSES.find(x=>x.num===num); if(!l) return;
+  const [cx,cy] = centroid(l.pts);
+  view.tx = 600 - cx*view.scale;
+  view.ty = 450 - cy*view.scale;
+  applyView();
+}
+
+//= = = = = = = = = = = = = = = MAP POPUP = = = = = = = = = = = = = = =
+function showPopup(num){
+  const l = LICENSES.find(x=>x.num===num); if(!l) return;
+  $("#pop-num").textContent = l.num;
+  $("#pop-holder").textContent = l.holder;
+  $("#pop-status").textContent = l.status;
+  $("#pop-pill").style.cssText = `--pc:${STATUS[l.status].color}`;
+  $("#pop-meta").innerHTML = `<span class="tag">${l.type}</span><span class="tag">${l.mineral}</span><span class="tag mono">${fmt(l.ha)} ha</span>`;
+  $("#pop-region").innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.2"/></svg>${l.district}`;
+  $("#popup").classList.add("show");
+  positionPopup();
+}
+function closePopup(){ $("#popup").classList.remove("show"); }
+function positionPopup(){
+  const pop = $("#popup");
+  if (!state.selected || !pop.classList.contains("show")) return;
+  const l = LICENSES.find(x=>x.num===state.selected); if(!l) return;
+  const [cx,cy] = centroid(l.pts);
+  const r = svg.getBoundingClientRect();
+  const vbScale = Math.max(r.width/1200, r.height/900);
+  const offX = (r.width - 1200*vbScale)/2;
+  const offY = (r.height - 900*vbScale)/2;
+  const ax = offX + (cx*view.scale + view.tx) * vbScale;
+  const ay = offY + (cy*view.scale + view.ty) * vbScale;
+  const w = pop.offsetWidth || 250;
+  pop.classList.toggle("below", ay < 220);
+  const left = Math.max(w/2 + 8, Math.min(r.width - w/2 - 8, ax));
+  pop.style.left = left + "px";
+  pop.style.top = ay + "px";
+  const tail = pop.querySelector(".popup-tail");
+  if (tail) tail.style.left = Math.max(12, Math.min(w-12, w/2 + (ax - left))) + "px";
+}
+function syncSelectionUI(){
+  $$(".lic-card").forEach(c => c.classList.toggle("selected", c.dataset.num === state.selected));
+  $$(".parcel").forEach(p => p.classList.toggle("selected", p.dataset.num === state.selected));
+  $$(".parcel-label").forEach(t => t.classList.toggle("show", t.dataset.num === state.selected));
+}
+function genHistory(l){
+  const ev = [];
+  const push = (date,title,note,tone) => ev.push({ date, title, note, tone });
+  const iss = new Date(l.issue);
+  const app = new Date(iss.getFullYear(), iss.getMonth()-6, Math.min(iss.getDate(),28));
+  push(app.toISOString().slice(0,10), "Application lodged", `${l.type} \u00b7 ${l.mineral}`, "neutral");
+  if (l.status === "Pending"){
+    push(l.issue, "Under technical review", "Cadastre survey &amp; environmental screening in progress", "pending");
+  } else {
+    push(l.issue, "Licence granted", `${fmt(l.ha)} ha registered to ${l.holder}`, "active");
+    const h = [...l.num].reduce((a,c)=>a+c.charCodeAt(0),0);
+    if (h % 3 === 0){ const t = new Date(iss.getFullYear()+2, h%12, 15); push(t.toISOString().slice(0,10), "Ownership transfer registered", "Change of controlling interest recorded", "neutral"); }
+    if (l.status === "Active" || l.status === "Suspended") push("2025-01-31", "Annual area charge paid", fmtK(feeFor(l.type,l.ha)), "active");
+    if (l.status === "Suspended") push("2024-11-02", "Licence suspended", "Non-compliance with programme of operations", "suspended");
+    if (l.status === "Expired") push(l.expiry, "Licence expired", "Term elapsed without renewal", "expired");
+    if (l.status === "Relinquished") push(l.expiry, "Relinquishment accepted", "Ground returned to the open cadastre", "relinquished");
+  }
+  return ev.sort((a,b) => a.date < b.date ? -1 : 1);
+}
+function openDetail(num){
+  const l = LICENSES.find(x=>x.num===num);
+  if (!l) return;
+  $("#d-num").textContent = l.num;
+  $("#d-holder").textContent = l.holder;
+  $("#d-type").textContent = l.type;
+  $("#d-mineral").textContent = l.mineral;
+  $("#d-area").textContent = fmt(l.ha) + " ha";
+  $("#d-regid").textContent = "ZM-" + l.num.split("-").slice(1).join("");
+  $("#d-issue").textContent = fmtDate(l.issue);
+  $("#d-expiry").textContent = fmtDate(l.expiry);
+  $("#d-district").textContent = l.district;
+
+  $("#detail-head").setAttribute("data-status", l.status);
+  $("#d-pill-text").textContent = l.status;
+  $("#d-pill").style.cssText = `--pc:${STATUS[l.status].color}`;
+
+  const start = new Date(l.issue).getTime();
+  const end = new Date(l.expiry).getTime();
+  const now = Date.now();
+  let pct = Math.max(0, Math.min(1, (now - start) / (end - start)));
+  const expired = l.status === "Expired" || now > end;
+  if (expired) pct = 1;
+  const fill = $("#d-term-fill");
+  fill.style.width = (pct*100).toFixed(1) + "%";
+  fill.style.background = STATUS[l.status].color;
+  $("#d-term-from").textContent = fmtDate(l.issue);
+  $("#d-term-to").textContent = fmtDate(l.expiry);
+  const yrsLeft = Math.round((end - now)/(365.25*24*3600*1000));
+  $("#d-term-state").textContent = expired ? "Term elapsed" : (yrsLeft <= 0 ? "Expiring" : yrsLeft + " yrs remaining");
+
+  const rate = FEE_RATES[l.type] || 20;
+  $("#d-fee").textContent = fmtK(feeFor(l.type, l.ha));
+  $("#d-fee-basis").textContent = `${fmt(l.ha)} ha \u00d7 K${rate}/ha`;
+
+  $("#d-history").innerHTML = genHistory(l).map(e => `
+    <div class="hist-item ${e.tone}">
+      <div class="hist-dot"></div>
+      <div class="hist-body"><div class="hist-date mono">${fmtDate(e.date)}</div><div class="hist-ev">${e.title}</div><div class="hist-note">${e.note}</div></div>
+    </div>`).join("");
+
+  $("#detail").classList.add("open");
+  $("#scrim").classList.add("show");
+}
+function closeDetail(){
+  $("#detail").classList.remove("open");
+  $("#scrim").classList.remove("show");
+  state.selected = null;
+  syncSelectionUI();
+}
+
+//= = = = = = = = = = = = = = = MAP FILTER DIMMING = = = = = = = = = = = = = = =
+function applyMapFilter(){
+  const visible = new Set(LICENSES.filter(passesFilters).map(l=>l.num));
+  const anyFilter = state.status.size || state.type.size || state.mineral.size || state.search;
+  $$(".parcel").forEach(p => p.classList.toggle("dim", anyFilter && !visible.has(p.dataset.num)));
+  $$(".parcel-label").forEach(t => { if (anyFilter && !visible.has(t.dataset.num)) t.classList.remove("show"); });
+  const sc = COLOR_SCHEMES[colorMode];
+  $$("#legend-rows .legend-row").forEach(r => r.classList.toggle("off", sc.field && state[sc.field].size && !state[sc.field].has(r.dataset.legend)));
+  if (anyFilter && state.selected && !visible.has(state.selected)) closePopup();
+}
+
+//= = = = = = = = = = = = = = = UPDATE = = = = = = = = = = = = = = =
+function update(){ renderList(); applyMapFilter(); updateFilterCounts(); const anyF = state.status.size || state.type.size || state.mineral.size; const fc = $("#fp-clear"); if (fc) fc.classList.toggle("show", !!anyF); }
+function clearAll(){
+  state.status.clear(); state.type.clear(); state.mineral.clear();
+  state.search = "";
+  $("#search").value = "";
+  $("#search-clear").style.display = "none";
+  $$('#filters input[type=checkbox]').forEach(cb => cb.checked = false);
+  update();
+}
+
+//= = = = = = = = = = = = = = = LAYER TOGGLE = = = = = = = = = = = = = = =
+function initLayers(){
+  $$('.layer-toggle input[data-layer]').forEach(cb => {
+    const map = { parcels:["#layer-parcels","#layer-parcel-labels"], occ:["#layer-occ"], admin:["#layer-admin"] };
+    const apply = () => (map[cb.dataset.layer]||[]).forEach(sel => $(sel).classList.toggle("layer-hidden", !cb.checked));
+    cb.addEventListener("change", apply);
+    apply();
+  });
+}
+
+//= = = = = = = = = = = = = = = PAN / ZOOM = = = = = = = = = = = = = = =
+const view = { scale:1, tx:0, ty:0 };
+const vp = $("#viewport");
+const svg = $("#map-svg");
+function applyView(){ vp.setAttribute("transform", `translate(${view.tx} ${view.ty}) scale(${view.scale})`); positionPopup(); updateScaleBar(); renderCadGrid(); }
+function clampScale(s){ return Math.max(0.7, Math.min(8, s)); }
+function svgPoint(evt){
+  const r = svg.getBoundingClientRect();
+  const vbScale = Math.max(r.width/1200, r.height/900);
+  const offX = (r.width - 1200*vbScale)/2;
+  const offY = (r.height - 900*vbScale)/2;
+  return { x:(evt.clientX - r.left - offX)/vbScale, y:(evt.clientY - r.top - offY)/vbScale };
+}
+function zoomAt(factor, px, py){
+  const ns = clampScale(view.scale * factor);
+  const k = ns / view.scale;
+  view.tx = px - (px - view.tx) * k;
+  view.ty = py - (py - view.ty) * k;
+  view.scale = ns;
+  applyView();
+}
+svg.addEventListener("wheel", e => { e.preventDefault(); const p = svgPoint(e); zoomAt(e.deltaY < 0 ? 1.12 : 1/1.12, p.x, p.y); }, { passive:false });
+
+let dragging = false, last = null, moved = false;
+svg.addEventListener("pointerdown", e => { dragging = true; moved = false; last = { x:e.clientX, y:e.clientY }; svg.classList.add("dragging"); });
+window.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const dx = e.clientX - last.x, dy = e.clientY - last.y;
+  if (Math.abs(dx)+Math.abs(dy) > 3) moved = true;
+  const r = svg.getBoundingClientRect();
+  const vbScale = Math.max(r.width/1200, r.height/900);
+  view.tx += dx / vbScale; view.ty += dy / vbScale;
+  last = { x:e.clientX, y:e.clientY };
+  applyView();
+});
+function endDrag(){ dragging = false; svg.classList.remove("dragging"); }
+window.addEventListener("pointerup", endDrag);
+window.addEventListener("pointercancel", endDrag);
+
+$("#zoom-in").addEventListener("click", () => zoomAt(1.3, 600, 450));
+$("#zoom-out").addEventListener("click", () => zoomAt(1/1.3, 600, 450));
+$("#zoom-reset").addEventListener("click", () => { view.scale=1; view.tx=0; view.ty=0; applyView(); });
+
+function zoomToParcel(num){
+  const l = LICENSES.find(x=>x.num===num); if(!l) return;
+  const a = l.pts.split(" ").map(p=>p.split(",").map(Number));
+  const xs = a.map(p=>p[0]), ys = a.map(p=>p[1]);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+  const s = clampScale(Math.min(1200/(maxX-minX), 900/(maxY-minY)) * 0.22);
+  view.scale = s; view.tx = 600 - cx*s; view.ty = 450 - cy*s;
+  applyView();
+}
+$$(".btn-primary").forEach(b => b.addEventListener("click", () => { if(state.selected) zoomToParcel(state.selected); }));
+
+//= = = = = = = = = = = = = = = SEARCH = = = = = = = = = = = = = = =
+$("#search").addEventListener("input", e => {
+  state.search = e.target.value.trim();
+  $("#search-clear").style.display = state.search ? "block" : "none";
+  update();
+});
+$("#search-clear").addEventListener("click", () => { state.search = ""; $("#search").value = ""; $("#search-clear").style.display = "none"; update(); $("#search").focus(); });
+
+//= = = = = = = = = = = = = = = WIRE + INIT = = = = = = = = = = = = = = =
+$("#detail-close").addEventListener("click", closeDetail);
+$("#scrim").addEventListener("click", closeDetail);
+$("#popup-close").addEventListener("click", () => { closePopup(); state.selected = null; syncSelectionUI(); });
+$("#popup-full").addEventListener("click", () => { if (state.selected){ openDetail(state.selected); closePopup(); } });
+// click empty map background closes the popup
+svg.addEventListener("click", e => {
+  if (draw.mode){ if (moved) return; if (!e.target.closest(".parcel")) handleDrawClick(e); return; }
+  if (moved || e.target.closest(".parcel")) return;
+  closePopup();
+  if (!$("#detail").classList.contains("open")) { state.selected = null; syncSelectionUI(); }
+});
+window.addEventListener("resize", positionPopup);
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && draw.mode && (draw.mode==="measure"||draw.mode==="area"||draw.mode==="sketch") && draw.pts.length){ finishPending(); return; }
+  if (e.key !== "Escape") return;
+  if ($("#doc-modal").classList.contains("show")){ closeDocs(); return; }
+  if ($("#exp-modal") && $("#exp-modal").classList.contains("show")){ closeExpiry(); return; }
+  if (draw.mode){
+    if (draw.pts.length || draw.rectCorner){ draw.pts = []; draw.rectCorner = null; draw.hover = null; renderDraw(); updateHud(); }
+    else setTool(null);
+    return;
+  }
+  if ($("#coord-search").classList.contains("show")) { $("#coord-search").classList.remove("show"); $("#tool-coord").classList.remove("active"); return; }
+  if ($("#detail").classList.contains("open")) { closeDetail(); }
+  else if ($("#popup").classList.contains("show")) { closePopup(); state.selected = null; syncSelectionUI(); }
+});
+
+//= = = = = = = = = = = = = = = MAP TOOLS (added) = = = = = = = = = = = = = = =
+const draw = { mode:null, pts:[], hover:null, rectCorner:null, shapes:[], markers:[] };
+const snap = { on:false, step:GRID_DEG };
+
+function snapPt(mx,my){ if(!snap.on) return [mx,my]; let g = invProj(mx,my); const lon = Math.round(g[0]/snap.step)*snap.step, lat = Math.round(g[1]/snap.step)*snap.step; return proj(lon,lat); }
+function blockHa(step){ const kLat = KM_PER_DEG, kLon = KM_PER_DEG*Math.cos(13*Math.PI/180); return (step*kLat)*(step*kLon)*100; }
+function stepLabel(step){ const m = step*60; return m >= 1 ? (Number.isInteger(m)?m:m.toFixed(0))+"\u2032" : Math.round(m*60)+"\u2033"; }
+function unitStr(ha){ if(!snap.on || !ha) return ""; const n = Math.max(1, Math.round(ha/blockHa(snap.step))); return ` \u00b7 \u2248 ${n} unit${n>1?"s":""} (${stepLabel(snap.step)})`; }
+function renderCadGrid(){
+  const g = $("#layer-cadgrid"); if(!g) return;
+  if(!snap.on){ g.innerHTML = ""; return; }
+  const x0=(0-view.tx)/view.scale, x1=(1200-view.tx)/view.scale, y0=(0-view.ty)/view.scale, y1=(900-view.ty)/view.scale;
+  const gA = invProj(x0,y0), gB = invProj(x1,y1);
+  const lonMin=Math.min(gA[0],gB[0]), lonMax=Math.max(gA[0],gB[0]), latMin=Math.min(gA[1],gB[1]), latMax=Math.max(gA[1],gB[1]);
+  let step = GRID_DEG; while((lonMax-lonMin)/step > 90) step *= 2;
+  snap.step = step;
+  let s = "";
+  for(let lon=Math.floor(lonMin/step)*step; lon<=lonMax; lon+=step){ const x=proj(lon,0)[0]; s += `<line class="cad-grid-line" x1="${x.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y1.toFixed(1)}"/>`; }
+  for(let lat=Math.floor(latMin/step)*step; lat<=latMax; lat+=step){ const y=proj(0,lat)[1]; s += `<line class="cad-grid-line" x1="${x0.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }
+  g.innerHTML = s;
+}
+
+function screenToMap(e){ const p = svgPoint(e); return snapPt((p.x - view.tx)/view.scale, (p.y - view.ty)/view.scale); }
+function parsePts(str){ return str.trim().split(/\s+/).map(p => p.split(",").map(Number)); }
+function rectPts(a,b){ return [[a[0],a[1]],[b[0],a[1]],[b[0],b[1]],[a[0],b[1]]]; }
+function centroidArr(pts){ const c = pts.reduce((s,p)=>[s[0]+p[0],s[1]+p[1]],[0,0]); return [c[0]/pts.length, c[1]/pts.length]; }
+function fmtKm(km){ return (km < 10 ? km.toFixed(2) : km.toFixed(1)) + " km"; }
+function polyAreaHa(pts){
+  if (pts.length < 3) return 0;
+  const geo = pts.map(([x,y]) => invProj(x,y));
+  const latRef = geo.reduce((s,g)=>s+g[1],0)/geo.length * Math.PI/180;
+  const kLon = KM_PER_DEG * Math.cos(latRef), kLat = KM_PER_DEG;
+  let a = 0;
+  for (let i=0;i<geo.length;i++){ const g1 = geo[i], g2 = geo[(i+1)%geo.length]; a += (g1[0]*kLon)*(g2[1]*kLat) - (g2[0]*kLon)*(g1[1]*kLat); }
+  return Math.abs(a/2) * 100;
+}
+function pathPerimeterKm(pts, closed){
+  let t = 0;
+  for (let i=1;i<pts.length;i++){ const a = invProj(...pts[i-1]), b = invProj(...pts[i]); t += haversine(a[0],a[1],b[0],b[1]); }
+  if (closed && pts.length > 2){ const a = invProj(...pts[pts.length-1]), b = invProj(...pts[0]); t += haversine(a[0],a[1],b[0],b[1]); }
+  return t;
+}
+function pointInPolyArr(x,y,poly){
+  let inside = false;
+  for (let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i][0], yi=poly[i][1], xj=poly[j][0], yj=poly[j][1];
+    if (((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) inside = !inside;
+  }
+  return inside;
+}
+function ccw(a,b,c){ return (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0]); }
+function segInt(p1,p2,p3,p4){
+  const d1=ccw(p3,p4,p1), d2=ccw(p3,p4,p2), d3=ccw(p1,p2,p3), d4=ccw(p1,p2,p4);
+  return ((d1>0&&d2<0)||(d1<0&&d2>0)) && ((d3>0&&d4<0)||(d3<0&&d4>0));
+}
+function polysOverlap(A,B){
+  if (A.some(p => pointInPolyArr(p[0],p[1],B))) return true;
+  if (B.some(p => pointInPolyArr(p[0],p[1],A))) return true;
+  for (let i=0;i<A.length;i++){ const a1=A[i], a2=A[(i+1)%A.length];
+    for (let j=0;j<B.length;j++){ if (segInt(a1,a2,B[j],B[(j+1)%B.length])) return true; } }
+  return false;
+}
+function findClashes(pts){ return LICENSES.filter(l => polysOverlap(pts, parsePts(l.pts))).map(l => l.num); }
+
+//= = = = = = = = = = = = = = = BUFFER / SETBACK = = = = = = = = = = = = = = =
+const buffer = { center:null, km:5, hits:[] };
+function distSeg(px,py,ax,ay,bx,by){ const dx=bx-ax, dy=by-ay, L=dx*dx+dy*dy||1; let t=((px-ax)*dx+(py-ay)*dy)/L; t=Math.max(0,Math.min(1,t)); return Math.hypot(px-(ax+t*dx), py-(ay+t*dy)); }
+function bufferHits(clon,clat,R){
+  const kx = KM_PER_DEG*Math.cos(clat*Math.PI/180), ky = KM_PER_DEG;
+  const toKm = g => [ (g[0]-clon)*kx, (g[1]-clat)*ky ];
+  return LICENSES.filter(l => {
+    const poly = parsePts(l.pts).map(p => toKm(invProj(p[0],p[1])));
+    if (pointInPolyArr(0,0,poly)) return true;
+    let min = Infinity;
+    for (let i=0;i<poly.length;i++){ const a=poly[i], b=poly[(i+1)%poly.length]; min = Math.min(min, distSeg(0,0,a[0],a[1],b[0],b[1])); }
+    return min <= R;
+  }).map(l => l.num);
+}
+function highlightBuffer(){ const set = new Set(buffer.hits); $$(".parcel").forEach(p => p.classList.toggle("buffered", set.has(p.dataset.num))); }
+function applyBuffer(){ if(!buffer.center){ buffer.hits=[]; highlightBuffer(); return; } const g = invProj(buffer.center[0],buffer.center[1]); buffer.hits = bufferHits(g[0],g[1],buffer.km); highlightBuffer(); }
+
+function invProj(mx,my){ return [ (mx - OX)/SX + 21.5, -((my - OY)/SY) - 8 ]; }
+function toDMS(v, pos, neg){
+  const h = v >= 0 ? pos : neg; v = Math.abs(v);
+  let d = Math.floor(v), mf = (v-d)*60, m = Math.floor(mf), s = Math.round((mf-m)*60);
+  if (s === 60){ s = 0; m++; } if (m === 60){ m = 0; d++; }
+  return `${d}°${String(m).padStart(2,"0")}'${String(s).padStart(2,"0")}"${h}`;
+}
+function haversine(lon1,lat1,lon2,lat2){
+  const R = 6371, rad = Math.PI/180;
+  const dLat = (lat2-lat1)*rad, dLon = (lon2-lon1)*rad;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function pointInPoly(x, y, ptsStr){
+  const pts = ptsStr.split(" ").map(p => p.split(",").map(Number));
+  let inside = false;
+  for (let i=0, j=pts.length-1; i<pts.length; j=i++){
+    const [xi,yi] = pts[i], [xj,yj] = pts[j];
+    if (((yi>y) !== (yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+function buildRelief(){
+  const g = $("#layer-relief"); if (!g) return;
+  const defs = svg.querySelector("defs");
+  const cp = el("clipPath", { id:"zm-clip" });
+  cp.appendChild(el("path", { d: geoPath(ZAMBIA, true) }));
+  defs.appendChild(cp);
+  g.setAttribute("clip-path", "url(#zm-clip)");
+  const blobs = [[31.6,-10.8,55,80],[33.0,-9.7,42,46],[32.2,-12.4,46,60],[27.9,-12.7,52,44],[29.2,-9.2,36,42],[24.6,-11.4,46,54]];
+  blobs.forEach(([lon,lat,rx,ry]) => { const [x,y] = proj(lon,lat); g.appendChild(el("ellipse", { class:"relief-blob", cx:x, cy:y, rx, ry, filter:"url(#softblur)" })); });
+}
+
+function updateScaleBar(){
+  const kmFull = (148/(SX*view.scale))*KM_PER_DEG;
+  const f = k => k >= 100 ? Math.round(k/10)*10 : (k >= 10 ? Math.round(k) : k.toFixed(1));
+  const mid = $("#scale-mid"), max = $("#scale-max");
+  if (mid) mid.textContent = f(kmFull/2);
+  if (max) max.textContent = f(kmFull) + " km";
+}
+
+function setTool(mode){
+  if (draw.mode === mode) mode = null;
+  draw.mode = mode; draw.pts = []; draw.rectCorner = null; draw.hover = null;
+  $("#coord-search").classList.remove("show"); $("#tool-coord").classList.remove("active");
+  ["measure","area","sketch","rect","marker","buffer"].forEach(m => $("#tool-"+m).classList.toggle("active", draw.mode===m));
+  svg.style.cursor = draw.mode ? "crosshair" : "";
+  renderDraw(); updateHud();
+}
+function handleDrawClick(e){
+  if (moved) return;
+  const pt = screenToMap(e);
+  if (draw.mode === "marker"){ draw.markers.push(pt); renderDraw(); updateHud(); return; }
+  if (draw.mode === "rect"){
+    if (!draw.rectCorner) draw.rectCorner = pt;
+    else { draw.shapes.push({ type:"rect", pts: rectPts(draw.rectCorner, pt) }); draw.rectCorner = null; draw.hover = null; }
+    renderDraw(); updateHud(); return;
+  }
+  if (draw.mode === "buffer"){ buffer.center = pt; applyBuffer(); renderDraw(); updateHud(); return; }
+  draw.pts.push(pt); renderDraw(); updateHud();
+}
+function finishPending(){
+  if (draw.mode === "measure" && draw.pts.length >= 2) draw.shapes.push({ type:"line", pts: draw.pts.slice() });
+  else if (draw.mode === "area" && draw.pts.length >= 3) draw.shapes.push({ type:"poly", pts: draw.pts.slice() });
+  else if (draw.mode === "sketch" && draw.pts.length >= 3){ draw.shapes.push({ type:"sketch", pts: draw.pts.slice(), clash: findClashes(draw.pts) }); highlightClashes(); }
+  draw.pts = []; draw.hover = null; renderDraw(); updateHud();
+}
+function drawAction(act){
+  if (act === "undo"){ if (draw.mode==="marker") draw.markers.pop(); else if (draw.rectCorner) draw.rectCorner = null; else draw.pts.pop(); }
+  else if (act === "finish"){ finishPending(); return; }
+  else if (act === "new"){ draw.pts = []; draw.hover = null; }
+  else if (act === "clearone"){ clearAllDraw(); return; }
+  else if (act === "geojson" || act === "kml"){
+    const last = [...draw.shapes].reverse().find(s => s.type==="sketch");
+    if (last){ const o = sketchObj(last); if (act==="geojson") download("proposed-area.geojson", toGeoJSON(o), "application/geo+json"); else download("proposed-area.kml", toKML(o), "application/vnd.google-earth.kml+xml"); }
+    return;
+  }
+  else if (act === "copy"){
+    const last = [...draw.shapes].reverse().find(s => s.type==="sketch");
+    if (last){ copyCoords(last); const b = $('#dh-actions button[data-act="copy"]'); if (b){ b.textContent = "Copied \u2713"; setTimeout(updateHud, 1400); } }
+    return;
+  }
+  renderDraw(); updateHud();
+}
+function sketchObj(sh){ return { num:"PROPOSED", holder:"Draft application area", status:"Draft", type:"Application", mineral:"\u2014", ha:Math.round(polyAreaHa(sh.pts)), pts: sh.pts.map(p=>p.join(",")).join(" ") }; }
+function clearAllDraw(){ draw.shapes = []; draw.markers = []; draw.pts = []; draw.rectCorner = null; draw.hover = null; buffer.center = null; buffer.hits = []; highlightBuffer(); highlightClashes(); renderDraw(); updateHud(); }
+function highlightClashes(){
+  const set = new Set();
+  draw.shapes.forEach(s => { if (s.type==="sketch" && s.clash) s.clash.forEach(n => set.add(n)); });
+  $$(".parcel").forEach(p => p.classList.toggle("clash", set.has(p.dataset.num)));
+}
+function copyCoords(sh){
+  const rows = sh.pts.map((p,i) => { const g = invProj(p[0],p[1]); return `${i+1}\t${toDMS(g[1],"N","S")}\t${toDMS(g[0],"E","W")}`; });
+  navigator.clipboard && navigator.clipboard.writeText("Vertex\tLatitude\tLongitude\n" + rows.join("\n"));
+}
+function drawLabel(g, pt, text){ const t = el("text", { class:"draw-label", x:pt[0], y:pt[1] }); t.textContent = text; g.appendChild(t); }
+function drawShape(g, sh, pending){
+  if (sh.type === "line"){
+    let poly = sh.pts.slice();
+    if (pending && draw.hover) poly = poly.concat([draw.hover]);
+    if (poly.length >= 2) g.appendChild(el("polyline", { class:"draw-line"+(pending?" pending":""), points: poly.map(p=>p.join(",")).join(" ") }));
+    poly.forEach(p => g.appendChild(el("circle", { class:"draw-vertex", cx:p[0], cy:p[1], r:3.4 })));
+    if (poly.length >= 2){ const lp = poly[poly.length-1]; drawLabel(g, [lp[0], lp[1]-9], fmtKm(pathPerimeterKm(poly,false))); }
+  } else {
+    let arr = sh.pts.slice();
+    if (pending && draw.hover && sh.type !== "rect") arr = arr.concat([draw.hover]);
+    let cls = "draw-poly";
+    if (sh.type === "sketch") cls += pending ? " sketch-pending" : ((sh.clash && sh.clash.length) ? " sketch-clash" : " sketch-ok");
+    if (pending) cls += " pending";
+    if (arr.length >= 2) g.appendChild(el("polygon", { class:cls, points: arr.map(p=>p.join(",")).join(" ") }));
+    arr.forEach(p => g.appendChild(el("circle", { class:"draw-vertex", cx:p[0], cy:p[1], r:3.4 })));
+    if (arr.length >= 3) drawLabel(g, centroidArr(arr), fmt(Math.round(polyAreaHa(arr))) + " ha");
+  }
+}
+function drawMarker(g, m, n){
+  const x = m[0], y = m[1];
+  g.appendChild(el("circle", { class:"draw-marker-halo", cx:x, cy:y, r:9 }));
+  g.appendChild(el("circle", { class:"draw-marker-core", cx:x, cy:y, r:4.5 }));
+  const g2 = invProj(x,y);
+  const t = el("text", { class:"draw-marker-label", x:x+11, y:y-3 }); t.textContent = "P"+n; g.appendChild(t);
+  const c = el("text", { class:"draw-marker-label", x:x+11, y:y+9, style:"font-size:8.5px;fill:#5a6b73" });
+  c.textContent = `${toDMS(g2[1],"N","S")} ${toDMS(g2[0],"E","W")}`; g.appendChild(c);
+}
+function renderDraw(){
+  const g = $("#layer-measure"); g.innerHTML = "";
+  draw.shapes.forEach(sh => drawShape(g, sh, false));
+  if (draw.pts.length) drawShape(g, { type: draw.mode==="measure"?"line":(draw.mode==="sketch"?"sketch":"poly"), pts: draw.pts.slice() }, true);
+  if (draw.mode === "rect" && draw.rectCorner){
+    if (draw.hover) drawShape(g, { type:"rect", pts: rectPts(draw.rectCorner, draw.hover) }, true);
+    g.appendChild(el("circle", { class:"draw-vertex", cx:draw.rectCorner[0], cy:draw.rectCorner[1], r:3.6 }));
+  }
+  if (buffer.center){
+    const bg = invProj(buffer.center[0],buffer.center[1]);
+    const rx = (buffer.km/(KM_PER_DEG*Math.cos(bg[1]*Math.PI/180)))*SX, ry = (buffer.km/KM_PER_DEG)*SY;
+    g.appendChild(el("ellipse", { class:"buffer-ring", cx:buffer.center[0], cy:buffer.center[1], rx, ry }));
+    g.appendChild(el("circle", { class:"draw-vertex", cx:buffer.center[0], cy:buffer.center[1], r:3.6 }));
+  }
+  draw.markers.forEach((m,i) => drawMarker(g, m, i+1));
+}
+function updateHud(){
+  const hud = $("#draw-hud");
+  if (!draw.mode){ hud.classList.remove("show"); return; }
+  hud.classList.add("show");
+  const names = { measure:"Measure distance", area:"Measure area", sketch:"Sketch application area", rect:"Draw block", marker:"Survey markers", buffer:"Buffer / setback" };
+  $("#dh-tool").textContent = names[draw.mode];
+  const ro = $("#dh-readout"), cf = $("#dh-conflict"), ac = $("#dh-actions");
+  cf.style.display = "none"; cf.innerHTML = ""; let acts = [];
+  if (draw.mode === "measure"){
+    ro.innerHTML = draw.pts.length ? `<b>${fmtKm(pathPerimeterKm(draw.pts,false))}</b> \u00b7 ${draw.pts.length} pt${draw.pts.length>1?"s":""}` : `Click points along a path to measure its length.`;
+    acts = draw.pts.length ? [["undo","Undo"],["clearone","Clear"],["finish","Finish line"]] : [["clearone","Clear"]];
+  } else if (draw.mode === "area"){
+    ro.innerHTML = draw.pts.length>=3 ? `<b>${fmt(Math.round(polyAreaHa(draw.pts)))} ha</b> \u00b7 ${fmtKm(pathPerimeterKm(draw.pts,true))} perimeter${unitStr(polyAreaHa(draw.pts))}` : `Click at least 3 points, then Finish (or double-click).`;
+    acts = draw.pts.length ? [["undo","Undo"],["clearone","Clear"],["finish","Finish"]] : [["clearone","Clear"]];
+  } else if (draw.mode === "sketch"){
+    if (draw.pts.length){
+      ro.innerHTML = draw.pts.length>=3 ? `Proposed area <b>${fmt(Math.round(polyAreaHa(draw.pts)))} ha</b> \u00b7 ${draw.pts.length} vertices${unitStr(polyAreaHa(draw.pts))}` : `Trace the proposed boundary \u2014 at least 3 points.`;
+      acts = [["undo","Undo"],["clearone","Clear"],["finish","Check conflicts"]];
+    } else {
+      const last = [...draw.shapes].reverse().find(s => s.type==="sketch");
+      if (last){
+        ro.innerHTML = `Proposed area <b>${fmt(Math.round(polyAreaHa(last.pts)))} ha</b> \u00b7 ${last.pts.length} vertices${unitStr(polyAreaHa(last.pts))}<div class="hud-list" style="color:var(--ink-3)">Est. annual charge (exploration): ${fmtK(feeFor("Exploration", Math.round(polyAreaHa(last.pts))))}</div>`;
+        cf.style.display = "block";
+        if (last.clash.length){ cf.className = "dh-conflict clash"; cf.innerHTML = `<div class="cf-head">\u26a0 Overlaps ${last.clash.length} licence${last.clash.length>1?"s":""}</div><div class="cf-list">${last.clash.join(", ")}</div>`; }
+        else { cf.className = "dh-conflict ok"; cf.innerHTML = `<div class="cf-head">\u2713 No overlaps detected</div><div class="cf-list">Ground appears open at this boundary.</div>`; }
+        acts = [["new","New sketch"],["geojson","GeoJSON"],["kml","KML"],["copy","Copy coordinates"]];
+      } else {
+        ro.innerHTML = `Trace a proposed licence boundary to check it against granted ground.`;
+        acts = [["clearone","Clear"]];
+      }
+    }
+  } else if (draw.mode === "rect"){
+    ro.innerHTML = draw.rectCorner ? `Click the opposite corner to complete the block.` : `Click two opposite corners to define a rectangular block.`;
+    acts = [["clearone","Clear"]];
+  } else if (draw.mode === "marker"){
+    ro.innerHTML = draw.markers.length ? `<b>${draw.markers.length}</b> survey marker${draw.markers.length>1?"s":""} placed.` : `Click the map to drop numbered survey markers.`;
+    acts = draw.markers.length ? [["undo","Undo"],["clearone","Clear"]] : [["clearone","Clear"]];
+  } else if (draw.mode === "buffer"){
+    if (buffer.center){
+      const n = buffer.hits.length;
+      ro.innerHTML = `<b id="buf-count">${n}</b> licence<span id="buf-s">${n!==1?"s":""}</span> intersect a <b><span id="buf-km">${buffer.km}</span> km</b> buffer` +
+        `<div class="buf-ctl"><label>Radius</label><input id="buf-range" type="range" min="1" max="50" step="1" value="${buffer.km}"><input id="buf-num" type="number" min="1" max="200" value="${buffer.km}"><span style="font-size:11px;color:var(--ink-3)">km</span></div>` +
+        `<div class="hud-list" id="buf-list">${buffer.hits.join(", ")}</div>`;
+      acts = [["clearone","Clear"]];
+    } else {
+      ro.innerHTML = `Click a point to centre a setback / exclusion buffer.`;
+      acts = [["clearone","Clear"]];
+    }
+  }
+  ac.innerHTML = acts.map(([k,l]) => `<button data-act="${k}">${l}</button>`).join("");
+  $$("#dh-actions button").forEach(b => b.onclick = () => drawAction(b.dataset.act));
+  const br = $("#buf-range"), bn = $("#buf-num");
+  if (br){
+    const on = v => {
+      buffer.km = Math.max(1, Math.min(200, +v || 1));
+      if (document.activeElement !== br) br.value = Math.min(50, buffer.km);
+      if (document.activeElement !== bn) bn.value = buffer.km;
+      applyBuffer(); renderDraw();
+      const c=$("#buf-count"); if(c) c.textContent = buffer.hits.length;
+      const s=$("#buf-s"); if(s) s.textContent = buffer.hits.length!==1?"s":"";
+      const k=$("#buf-km"); if(k) k.textContent = buffer.km;
+      const ll=$("#buf-list"); if(ll) ll.textContent = buffer.hits.join(", ");
+    };
+    br.oninput = e => on(e.target.value);
+    bn.oninput = e => on(e.target.value);
+  }
+}
+
+function dropPin(mx,my){
+  const g = $("#layer-pin"); g.innerHTML = "";
+  g.appendChild(el("circle", { class:"pin-halo", cx:mx, cy:my, r:11 }));
+  g.appendChild(el("circle", { class:"pin-core", cx:mx, cy:my, r:5 }));
+}
+function clearPin(){ $("#layer-pin").innerHTML = ""; }
+
+// cursor coordinate readout + live drawing hover
+svg.addEventListener("mousemove", e => {
+  const p = svgPoint(e);
+  const mx = (p.x - view.tx)/view.scale, my = (p.y - view.ty)/view.scale;
+  const [lon,lat] = invProj(mx, my);
+  if (lon > 15 && lon < 40 && lat < 0 && lat > -25)
+    $("#coord-readout").textContent = `${toDMS(lat,"N","S")}  ${toDMS(lon,"E","W")}`;
+  if (draw.mode && (draw.pts.length || draw.rectCorner)){ draw.hover = snapPt(mx,my); renderDraw(); }
+});
+svg.addEventListener("mouseleave", () => { $("#coord-readout").textContent = "Move cursor over map"; });
+
+// drawing / measurement tools
+["measure","area","sketch","rect","marker","buffer"].forEach(m => $("#tool-"+m).addEventListener("click", () => setTool(m)));
+$("#tool-snap").addEventListener("click", () => { snap.on = !snap.on; $("#tool-snap").classList.toggle("active", snap.on); renderCadGrid(); updateHud(); });
+$("#tool-clear").addEventListener("click", clearAllDraw);
+$("#dh-close").addEventListener("click", () => setTool(null));
+svg.addEventListener("dblclick", e => { if (draw.mode==="area" || draw.mode==="sketch"){ e.preventDefault(); if (draw.pts.length) draw.pts.pop(); finishPending(); } });
+
+// coordinate locate
+$("#tool-coord").addEventListener("click", () => {
+  const cs = $("#coord-search");
+  const show = !cs.classList.contains("show");
+  cs.classList.toggle("show", show);
+  $("#tool-coord").classList.toggle("active", show);
+  if (show && draw.mode) setTool(null);
+});
+$("#cs-go").addEventListener("click", () => {
+  const latRaw = parseFloat($("#cs-lat").value), lonRaw = parseFloat($("#cs-lon").value);
+  const res = $("#cs-result");
+  if (isNaN(latRaw) || isNaN(lonRaw)){ res.textContent = "Enter valid coordinates."; return; }
+  const lat = -Math.abs(latRaw), lon = Math.abs(lonRaw);
+  const [mx,my] = proj(lon,lat);
+  view.scale = Math.max(view.scale, 2.4);
+  view.tx = 600 - mx*view.scale; view.ty = 450 - my*view.scale; applyView();
+  dropPin(mx,my);
+  const hit = LICENSES.find(l => pointInPoly(mx,my,l.pts));
+  res.innerHTML = hit
+    ? `<span class="cs-hit">● In licence</span> <b>${hit.num}</b><br>${hit.holder}`
+    : `<span class="cs-miss">○ No licence</span> — open ground at this point.`;
+});
+$("#cs-clear").addEventListener("click", () => { clearPin(); $("#cs-lat").value = ""; $("#cs-lon").value = ""; $("#cs-result").textContent = ""; });
+
+// fullscreen
+$("#tool-fs").addEventListener("click", () => {
+  const m = document.querySelector(".map");
+  if (!document.fullscreenElement) m.requestFullscreen?.(); else document.exitFullscreen?.();
+});
+document.addEventListener("fullscreenchange", () => $("#tool-fs").classList.toggle("active", !!document.fullscreenElement));
+
+// basemap theme
+$$(".basemap-switch button").forEach(b => b.addEventListener("click", () => {
+  $$(".basemap-switch button").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  const m = document.querySelector(".map");
+  m.classList.remove("theme-terrain","theme-minimal");
+  if (b.dataset.theme !== "cadastre") m.classList.add("theme-" + b.dataset.theme);
+}));
+
+buildRelief();
+
+// floating filter panel
+function clearFilters(){
+  state.status.clear(); state.type.clear(); state.mineral.clear();
+  $$('#filters input[type=checkbox]').forEach(cb => cb.checked = false);
+  update();
+}
+$("#fp-collapse").addEventListener("click", () => $("#filter-panel").classList.toggle("collapsed"));
+$("#fp-clear").addEventListener("click", clearFilters);
+
+renderStats();
+buildFilters();
+buildLegend();
+buildGraticule();
+buildBasemap();
+buildProvinces();
+buildParcels();
+buildOccurrences();
+buildPlaces();
+initLayers();
+recolorParcels();
+$("#color-by").addEventListener("change", e => { colorMode = e.target.value; recolorParcels(); buildLegend(); applyMapFilter(); });
+applyView();
+update();
+
+//= = = = = = = = = = = = = = = EXPORT + DOCUMENTS = = = = = = = = = = = = = = =
+function download(name, text, mime){
+  const b = new Blob([text], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+function ring(ptsStr){ const r = parsePts(ptsStr).map(p => invProj(p[0],p[1])); r.push(r[0]); return r; }
+function toGeoJSON(o){
+  return JSON.stringify({ type:"Feature", properties:{ licence:o.num, holder:o.holder, status:o.status, type:o.type, mineral:o.mineral, area_ha:o.ha, crs:"EPSG:4326" },
+    geometry:{ type:"Polygon", coordinates:[ ring(o.pts).map(c => [ +c[0].toFixed(5), +c[1].toFixed(5) ]) ] } }, null, 2);
+}
+function toKML(o){
+  const cs = ring(o.pts).map(c => `${c[0].toFixed(6)},${c[1].toFixed(6)},0`).join(" ");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${o.num}</name>` +
+    `<Placemark><name>${o.num} \u2014 ${o.holder}</name><description>${o.type} \u00b7 ${o.mineral} \u00b7 ${fmt(o.ha)} ha \u00b7 ${o.status}</description>` +
+    `<Polygon><outerBoundaryIs><LinearRing><coordinates>${cs}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark></Document></kml>`;
+}
+function toCSV(o){
+  const rows = parsePts(o.pts).map((p,i) => { const g = invProj(p[0],p[1]); return `${i+1},${g[1].toFixed(6)},${g[0].toFixed(6)}`; });
+  return "vertex,latitude,longitude\n" + rows.join("\n");
+}
+function placeholderDoc(l, name){
+  return `ZAMBIA MINING CADASTRE \u2014 ${name.toUpperCase()}\n${"=".repeat(48)}\n\nLicence:  ${l.num}\nHolder:   ${l.holder}\nType:     ${l.type}\nMineral:  ${l.mineral}\nArea:     ${fmt(l.ha)} ha\nStatus:   ${l.status}\nDistrict: ${l.district}\nIssued:   ${fmtDate(l.issue)}\nExpires:  ${fmtDate(l.expiry)}\n\n[ This is a demonstration document generated by the cadastre viewer. ]`;
+}
+function docsFor(l){
+  const yr = l.issue.slice(0,4);
+  const list = [
+    { name:"Licence certificate", type:"PDF", date:l.issue, size:"412 KB" },
+    { name:"Cadastral survey plan", type:"DWG", date:l.issue, size:"1.8 MB" },
+    { name:"Programme of mining operations", type:"PDF", date:l.issue, size:"3.1 MB" },
+    { name:"Environmental project brief", type:"PDF", date:yr+"-05-14", size:"2.3 MB" },
+  ];
+  if (l.status==="Active" || l.status==="Suspended") list.push({ name:"Annual area charge receipt", type:"PDF", date:"2025-01-31", size:"96 KB" });
+  if (l.status==="Suspended") list.push({ name:"Notice of suspension", type:"PDF", date:"2024-11-02", size:"120 KB" });
+  if (l.status==="Expired") list.push({ name:"Expiry notification", type:"PDF", date:l.expiry, size:"88 KB" });
+  if (l.status==="Relinquished") list.push({ name:"Deed of relinquishment", type:"PDF", date:l.expiry, size:"140 KB" });
+  return list;
+}
+const DL_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
+function openDocs(num){
+  const l = LICENSES.find(x => x.num === num); if (!l) return;
+  $("#dm-title").textContent = `${l.num} \u2014 ${l.holder}`;
+  $("#dm-docs").innerHTML = docsFor(l).map(d => `
+    <div class="doc-row">
+      <span class="doc-ic ${d.type.toLowerCase()}">${d.type}</span>
+      <div class="doc-main"><div class="doc-name">${d.name}</div><div class="doc-sub">${fmtDate(d.date)} \u00b7 ${d.size}</div></div>
+      <button class="doc-dl" data-doc="${d.name}" aria-label="Download ${d.name}">${DL_ICON}</button>
+    </div>`).join("");
+  const exps = [
+    ["geojson","GeoJSON","Boundary polygon","{ }"],
+    ["kml","KML","Google Earth","\u25c7"],
+    ["csv","CSV vertices","Beacon coordinates","\u2630"],
+    ["plan","Site plan","Printable / PDF","\u2317"],
+  ];
+  $("#dm-exports").innerHTML = exps.map(([k,t,s,i]) => `<button data-exp="${k}"><span class="ei">${i}</span><span>${t}<span class="es">${s}</span></span></button>`).join("");
+  $$("#dm-exports button").forEach(b => b.onclick = () => exportParcel(l, b.dataset.exp));
+  $$("#dm-docs .doc-dl").forEach(b => b.onclick = () => download(`${l.num} - ${b.dataset.doc}.txt`, placeholderDoc(l, b.dataset.doc), "text/plain"));
+  $("#doc-modal").classList.add("show"); $("#doc-scrim").classList.add("show");
+}
+function closeDocs(){ $("#doc-modal").classList.remove("show"); $("#doc-scrim").classList.remove("show"); }
+function exportParcel(l, kind){
+  if (kind==="geojson") download(l.num+".geojson", toGeoJSON(l), "application/geo+json");
+  else if (kind==="kml") download(l.num+".kml", toKML(l), "application/vnd.google-earth.kml+xml");
+  else if (kind==="csv") download(l.num+"-vertices.csv", toCSV(l), "text/csv");
+  else if (kind==="plan"){ closeDocs(); openReport(l.num); }
+}
+function openReport(num){
+  const l = LICENSES.find(x => x.num === num); if (!l) return;
+  const a = parsePts(l.pts), xs = a.map(p=>p[0]), ys = a.map(p=>p[1]);
+  const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+  const w=(maxX-minX)||1, h=(maxY-minY)||1, pad=Math.max(w,h)*0.18;
+  const vb=`${(minX-pad).toFixed(1)} ${(minY-pad).toFixed(1)} ${(w+pad*2).toFixed(1)} ${(h+pad*2).toFixed(1)}`;
+  const color=STATUS[l.status].color;
+  const sw=(Math.max(w,h)/90).toFixed(2), rr=(Math.max(w,h)/70).toFixed(2), vsw=(Math.max(w,h)/140).toFixed(2);
+  const verts = a.map((p,i)=>{ const g=invProj(p[0],p[1]); return `<tr><td>${i+1}</td><td>${toDMS(g[1],"N","S")}</td><td>${toDMS(g[0],"E","W")}</td></tr>`; }).join("");
+  const dots = a.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${rr}" fill="#fff" stroke="${color}" stroke-width="${vsw}"/>`).join("");
+  const rate = FEE_RATES[l.type] || 20;
+  const win = window.open("", "_blank");
+  if (!win){ alert("Please allow pop-ups to generate the printable site plan."); return; }
+  const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Site plan \u2014 ${l.num}</title>
+  <style>
+    @page { size: A4 portrait; margin: 18mm; }
+    * { box-sizing: border-box; }
+    body { font-family: "Public Sans", system-ui, sans-serif; color: #15242d; margin: 0; padding: 28px; }
+    .rp-head { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #103a48; padding-bottom:14px; margin-bottom:20px; }
+    .rp-head h1 { font-size:19px; margin:0; color:#103a48; }
+    .rp-head .sub { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#7b8a93; font-weight:700; margin-top:4px; }
+    .rp-num { text-align:right; font-family:"IBM Plex Mono",monospace; }
+    .rp-num .n { font-size:16px; font-weight:700; } .rp-num .s { font-size:11px; color:#fff; background:${color}; padding:2px 8px; border-radius:100px; display:inline-block; margin-top:5px; }
+    .rp-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:24px; }
+    .rp-plan { border:1px solid #d8dee2; border-radius:6px; padding:10px; background:#f7f9f9; }
+    .rp-plan svg { width:100%; height:auto; display:block; }
+    dl { display:grid; grid-template-columns:auto 1fr; gap:7px 14px; margin:0; font-size:13px; }
+    dt { color:#7b8a93; font-weight:600; } dd { margin:0; font-weight:600; }
+    h2 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#7b8a93; margin:22px 0 8px; }
+    table { width:100%; border-collapse:collapse; font-size:12px; font-family:"IBM Plex Mono",monospace; }
+    th,td { text-align:left; padding:5px 8px; border-bottom:1px solid #e6ebed; } th { color:#7b8a93; font-size:10px; text-transform:uppercase; }
+    .rp-foot { margin-top:26px; padding-top:12px; border-top:1px solid #d8dee2; font-size:10px; color:#7b8a93; display:flex; justify-content:space-between; }
+    .rp-print { position:fixed; top:16px; right:16px; background:#103a48; color:#fff; border:none; padding:10px 18px; border-radius:5px; font:600 13px "Public Sans",sans-serif; cursor:pointer; }
+    @media print { .rp-print { display:none; } body { padding:0; } }
+  </style></head><body>
+    <button class="rp-print" onclick="window.print()">Print / Save PDF</button>
+    <div class="rp-head"><div><h1>Mining Licence Site Plan</h1><div class="sub">Republic of Zambia \u00b7 Ministry of Mines &amp; Cadastre</div></div>
+      <div class="rp-num"><div class="n">${l.num}</div><div class="s">${l.status}</div></div></div>
+    <div class="rp-grid">
+      <div class="rp-plan"><svg viewBox="${vb}"><polygon points="${l.pts}" fill="${color}33" stroke="${color}" stroke-width="${sw}"/>${dots}</svg></div>
+      <dl>
+        <dt>Holder</dt><dd>${l.holder}</dd>
+        <dt>Licence type</dt><dd>${l.type}</dd>
+        <dt>Primary mineral</dt><dd>${l.mineral}</dd>
+        <dt>Area</dt><dd>${fmt(l.ha)} ha</dd>
+        <dt>District</dt><dd>${l.district}</dd>
+        <dt>Issued</dt><dd>${fmtDate(l.issue)}</dd>
+        <dt>Expires</dt><dd>${fmtDate(l.expiry)}</dd>
+        <dt>Annual charge</dt><dd>${fmtK(feeFor(l.type,l.ha))} <span style="color:#7b8a93;font-weight:400">(K${rate}/ha)</span></dd>
+        <dt>Datum</dt><dd>WGS 84 (EPSG:4326)</dd>
+      </dl>
+    </div>
+    <h2>Boundary coordinate schedule</h2>
+    <table><thead><tr><th>Beacon</th><th>Latitude</th><th>Longitude</th></tr></thead><tbody>${verts}</tbody></table>
+    <div class="rp-foot"><span>Generated ${fmtDate(new Date().toISOString().slice(0,10))} \u00b7 Zambia Mining Cadastre viewer</span><span>Not a certified survey document</span></div>
+  </body></html>`;
+  win.document.write(doc);
+  win.document.close();
+}
+$("#btn-docs").addEventListener("click", () => { if (state.selected) openDocs(state.selected); });
+$("#dm-close").addEventListener("click", closeDocs);
+$("#doc-scrim").addEventListener("click", closeDocs);
+
+//= = = = = = = = = = = = = = = EXPIRY / RENEWALS = = = = = = = = = = = = = = =
+function daysLeft(l){ return Math.round((new Date(l.expiry).getTime() - Date.now())/86400000); }
+function renewalBanner(){
+  const up = LICENSES.filter(l => { const d = daysLeft(l); return d >= 0 && d <= 365 && l.status !== "Expired" && l.status !== "Relinquished"; });
+  const urgent = up.filter(l => daysLeft(l) <= 90).length;
+  const sec = $("#renewal-section");
+  if (!up.length){
+    sec.innerHTML = `<button class="renewal-banner ok" id="renewal-open"><span class="rb-ic">\u2713</span><span class="rb-main"><b>Renewals clear</b><span class="rb-sub">None lapse within 12 months</span></span><span class="rb-go">\u203a</span></button>`;
+  } else {
+    sec.innerHTML = `<button class="renewal-banner ${urgent?"urgent":"warn"}" id="renewal-open">
+      <span class="rb-ic">${urgent?"\u26a0":"\u23f1"}</span>
+      <span class="rb-main"><b>${up.length} expiring soon</b><span class="rb-sub">${urgent?urgent+" within 90 days \u00b7 ":""}view renewals</span></span>
+      <span class="rb-go">\u203a</span></button>`;
+  }
+  $("#renewal-open").addEventListener("click", openExpiry);
+}
+function expRow(x){
+  const l = x.l, d = x.d;
+  const tone = d < 0 ? "lapsed" : (d <= 90 ? "urgent" : (d <= 180 ? "warn" : "watch"));
+  const label = d < 0 ? Math.abs(d) + " days ago" : d + " days left";
+  return `<div class="exp-row" data-num="${l.num}">
+    <span class="pill" style="--pc:${STATUS[l.status].color}"><span class="dot"></span>${l.status}</span>
+    <div class="er-main"><div class="er-num mono">${l.num}</div><div class="er-holder">${l.holder}</div></div>
+    <div class="er-right"><div class="er-date mono">${fmtDate(l.expiry)}</div><div class="er-days ${tone}">${label}</div></div>
+  </div>`;
+}
+function buildExpTimeline(items){
+  const now = new Date();
+  let ticks = "";
+  for (let i = 0; i <= 12; i += 2){
+    const dt = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    ticks += `<div class="tl-tick" style="left:${(i/12)*100}%"><span>${dt.toLocaleString("en",{month:"short"})}${i>=12||dt.getFullYear()!==now.getFullYear()?" "+String(dt.getFullYear()).slice(2):""}</span></div>`;
+  }
+  const marks = items.map(x => { const tone = x.d <= 90 ? "urgent" : (x.d <= 180 ? "warn" : "watch"); return `<div class="tl-mark ${tone}" data-num="${x.l.num}" style="left:${Math.min(99,(x.d/365)*100)}%" title="${x.l.num} \u2014 ${fmtDate(x.l.expiry)}"></div>`; }).join("");
+  $("#ex-timeline").innerHTML = `<div class="tl-axis"></div>${ticks}${marks}`;
+}
+function openExpiry(){
+  const rows = LICENSES.map(l => ({ l, d: daysLeft(l) }));
+  const lapsed = rows.filter(x => x.d < 0 || x.l.status === "Expired").sort((a,b) => b.d - a.d);
+  const buckets = [
+    { label:"Within 90 days",  cls:"urgent", items: rows.filter(x => x.d >= 0 && x.d <= 90  && x.l.status !== "Expired") },
+    { label:"91 \u2013 180 days", cls:"warn",   items: rows.filter(x => x.d > 90  && x.d <= 180) },
+    { label:"181 \u2013 365 days",cls:"watch",  items: rows.filter(x => x.d > 180 && x.d <= 365) },
+  ];
+  const within12 = buckets[0].items.length + buckets[1].items.length + buckets[2].items.length;
+  $("#ex-summary").innerHTML = [
+    ["Within 90 days", buckets[0].items.length, "urgent"],
+    ["Within 12 months", within12, "warn"],
+    ["Lapsed / overdue", lapsed.length, "lapsed"],
+  ].map(([lab,n,c]) => `<div class="exp-stat ${c}"><div class="es-n">${n}</div><div class="es-l">${lab}</div></div>`).join("");
+  buildExpTimeline(rows.filter(x => x.d >= 0 && x.d <= 365));
+  const groupHTML = g => !g.items.length ? "" : `<div class="exp-group"><div class="eg-head ${g.cls}"><span class="eg-dot"></span>${g.label}<span class="eg-n">${g.items.length}</span></div>${g.items.sort((a,b)=>a.d-b.d).map(expRow).join("")}</div>`;
+  let html = buckets.map(groupHTML).join("");
+  if (lapsed.length) html += `<div class="exp-group"><div class="eg-head lapsed"><span class="eg-dot"></span>Lapsed / overdue<span class="eg-n">${lapsed.length}</span></div>${lapsed.map(expRow).join("")}</div>`;
+  $("#ex-groups").innerHTML = html || `<div class="empty-state">No upcoming expiries.</div>`;
+  $$("#ex-groups .exp-row, #ex-timeline .tl-mark").forEach(r => r.addEventListener("click", () => { const num = r.dataset.num; closeExpiry(); openDetailFromDashboard(num); }));
+  $("#exp-modal").classList.add("show"); $("#exp-scrim").classList.add("show");
+}
+function closeExpiry(){ $("#exp-modal").classList.remove("show"); $("#exp-scrim").classList.remove("show"); }
+function openDetailFromDashboard(num){ select(num, false); zoomToParcel(num); openDetail(num); }
+$("#ex-close").addEventListener("click", closeExpiry);
+$("#exp-scrim").addEventListener("click", closeExpiry);
+renewalBanner();
+</script>
+</body>
+</html>

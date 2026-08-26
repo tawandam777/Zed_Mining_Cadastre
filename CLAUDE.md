@@ -1,0 +1,104 @@
+# CLAUDE.md
+
+## Project Overview
+Mining Cadastre Viewer — an enterprise-grade Web GIS application for visualizing, searching, and spatially exploring mining licence data (Zambia dataset). It is a **read-only viewer**, not a licensing/management system: no applications, renewals, payments, approvals, transfers, or document management. The map is the application; every other panel exists to support interaction with it.
+
+## Tech Stack
+- **Next.js 16** (App Router) + **React 19** + **TypeScript** (strict) — deployed to **Vercel**, source on **GitHub**.
+- **Tailwind CSS v4** + **shadcn/ui** ("base-nova" style, base-ui primitives) for chrome/panels.
+- **Zustand** for client state (selection, layer visibility/opacity, active tool, theme, coordinate format).
+- **OpenLayers** + **ol-ext** for the map engine; **proj4** for CRS conversions (WGS84 / Web Mercator / UTM); **Turf.js** for client-side geometry previews (measure, buffer) and for the offline data provider's spatial queries.
+- **Supabase**: Postgres + **PostGIS** for storage and spatial queries, called via PL/pgSQL RPC functions wrapped by Next.js Route Handlers — see "Data provider" below for the offline fallback.
+
+## Architecture
+```
+app/                    Next.js routes
+  page.tsx              The map app (launches straight into the map, no dashboard)
+  api/licences/         GeoJSON licence endpoints
+  api/query/            point / bbox / nearest / within spatial query endpoints
+components/
+  map/                  MapCanvas (OpenLayers, client-only via next/dynamic ssr:false),
+                         licence/boundary layers, styles, controls (zoom, compass,
+                         scale bar, overview map, coordinate readout, basemap switcher)
+  shell/                TopBar, StatusBar, LeftPanel (Layers/Search tabs only), RightPanel
+  tools/                Floating tool rail + tool-status panel + spatial-tool handlers —
+                         all tool interaction lives on the map toolbar, not the sidebar
+  search/               Text search + coordinate search
+  layers/               Layer tree (national/province/district opacity, licence status legend)
+  attribute-table/      Sortable/filterable table with CSV/GeoJSON export
+config/
+  basemaps.ts           Basemap registry + DEFAULT_BASEMAP (single source of truth)
+  app.config.ts         Default CRS, coordinate formats, feature flags
+lib/                    supabase client/server, theme tokens, crs.ts, coord-parse.ts, geo.ts
+  data/                 DataProvider abstraction — see "Data provider" below
+store/useMapStore.ts    Zustand store
+supabase/
+  migrations/           PostGIS schema + RPC functions
+  seed/                 Seed script (real shapefiles + generated licences -> PostGIS)
+scripts/
+  generate-licences.ts  One-off generator -> lib/data/licences.generated.json (see below)
+Admin_Bounds/           Real Zambia admin boundary shapefiles (national/province/district)
+```
+
+## Data provider (offline-first)
+Every API route calls `getProvider()` from `lib/data/index.ts` instead of talking to Supabase directly. It returns:
+- **`supabaseProvider`** (`lib/data/supabaseProvider.ts`) when `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set — calls the real PostGIS RPCs.
+- **`localProvider`** (`lib/data/localProvider.ts`) otherwise — a fully offline, in-memory provider that serves `lib/data/licences.generated.json` and the real `Admin_Bounds/*.shp` shapefiles (via `lib/data/adminBoundaries.ts`), answering spatial queries with Turf.js instead of PostGIS.
+
+This means `npm run dev` works immediately with **zero external setup** — no Supabase project, no Docker, no Git even required to develop the app itself. The two providers implement the same `DataProvider` interface (`lib/data/types.ts`), so switching between them is just an env var away and requires no component changes.
+
+**Known accuracy trade-off**: `localProvider`'s nearest/within-distance/buffer queries use each licence's **centroid**, not full-polygon distance like PostGIS's `ST_Distance`/`ST_DWithin`. Fine for offline dev with ~55 features; treat `supabaseProvider` as the accurate/production path.
+
+**Deployment note (not yet relevant, offline dev only):** `lib/data/shapefileLoader.ts` reads `Admin_Bounds/*.shp` files via `fs.readFileSync(path.resolve(process.cwd(), ...))`. Turbopack's file tracer can't statically determine which files that touches, so it falls back to tracing the whole project (a build-time warning, not an error). Before deploying, add an explicit `outputFileTracingIncludes` entry in `next.config.ts` for the boundary-serving routes so only `Admin_Bounds/**` and `lib/data/licences.generated.json` ship in the serverless bundle, not the whole repo.
+
+## Admin boundaries & licence geometry (real data, not hand-drawn)
+- **Boundaries** come from `Admin_Bounds/{Zambia Boundary,Zambia Provinces,Zambia Districts}/*.shp` (COD-AB style, WGS84, no reprojection needed). `lib/data/shapefileLoader.ts` reads them as buffers (not file paths — see the Turbopack note above) via the `shapefile` npm package; `lib/data/adminBoundaries.ts` tags each feature with `kind: national|province|district` and caches the parsed result per process. Province names use the shapefile's exact spelling, e.g. **"North-Western"** (hyphenated).
+- **Licence geometry is generated, not hand-drawn.** `scripts/generate-licences.ts` (run via `npx tsx scripts/generate-licences.ts`) takes the licence *attributes* (owner, commodity, status, type, area, dates, licence number — from the original `ref/project/cadastre-data.js` mock) and produces entirely new polygons: a shelf/skyline bin-packing algorithm sizes each rectangle from the licence's real `area_ha`, tiles them edge-to-edge (with a small ~90m gap — see the file's `GAP_DEG` comment for why exact-touching edges are numerically fragile) within North-Western and Copperbelt provinces (the majority) and scattered singly across the other 8, then verifies everything against the real national boundary. Output is committed to `lib/data/licences.generated.json` — treat that file as generated/derived, re-run the script (not hand-edited) if the packing logic changes. The `province` property on every licence is recomputed via real point-in-polygon lookup against the province shapefile, not inherited from the old mock data.
+- To regenerate: `npx tsx scripts/generate-licences.ts`, then restart the dev server (the JSON is imported as a module, so Next needs to reload it).
+
+## Domain Conventions
+- **Licence status taxonomy & colors** (`lib/theme.ts` → `STATUS_COLORS`): Active `#16A34A`, Pending `#D97706`, Reserved `#0891B2`, Suspended `#EA580C`, Expired `#94A3B8`, Cancelled `#DC2626`. Used for polygon fill/stroke, legend, chips, and layer-tree checkboxes — change colors only in this one file.
+- **Licence hover/select styling** (`components/map/styles.ts` → `licenceStyleFunction`): hover, select, tool-selection, and flash all darken the outline to navy `#0F2A43` (matches the reference design); only the stroke *width* differs (hover=2px, selected/tool-selected/flashing=3px, default=1.25px). Don't reintroduce a hover state that only changes width — that was a bug fixed once already.
+- **All spatial tools are toolbar-only.** There is no "Tools" tab in the left sidebar (removed by design) — `components/tools/ToolRail.tsx` (floating, top-left of the map) is the only way to activate a tool, and `components/tools/ToolStatusPanel.tsx` (floating, next to the rail) is the only place tool instructions/buffer-radius/measurements appear. Don't add tool controls back into `LeftPanel`.
+- **Drag-based tools show a cursor-following live-measurement HUD** (`components/tools/liveMeasurement.ts` + the `measureHud` state in `MapCanvas.tsx`), distinct from `ToolStatusPanel`'s fixed final-result readout. Applies to measure distance/area, select-by-rectangle/circle/polygon; deliberately not buffer (slider-driven) or identify. Its visibility is derived at render time (`activeTool && !toolFrozen`) rather than reset via an effect — same reasoning as the dark-mode/RightPanel fixes logged in todo.md.
+- **`pointermove` handling is `requestAnimationFrame`-throttled, not run per raw event.** `MapCanvas.tsx` stashes only the latest event and does the actual work (mouse-position store update, tool-overlay rebuild, live-measurement calc, hover hit-test) inside an rAF callback, capping it to ~60/sec regardless of how fast the browser fires raw pointer events (100-200+/sec is normal on modern hardware). This exists because it was a real, user-reported lag bug — anything added to that hot path (new tool behavior, new HUD content, etc.) must go inside `processPointerMove`, not as a second uncapped `map.on("pointermove", ...)` listener, or the same lag comes back.
+- **Basemap switching is a floating control** (`components/map/controls/BasemapSwitcher.tsx`, bottom-center of the map canvas, per the reference design) — not in the Layers tab.
+- **Administrative boundaries have three independent layers**, each with its own visibility toggle + opacity slider in the Layers tab: Zambia Boundary (national), Province Boundaries, District Boundaries. Store fields: `show*Boundary(ies)` / `*BoundaryOpacity` for `national`/`province`/`district`. **All layers (boundaries + licence statuses) default to fully on, full opacity** — see `DEFAULT_STATUS_VISIBILITY` in `lib/theme.ts` and the defaults in `store/useMapStore.ts`. Don't reintroduce a status/layer defaulting to hidden or partial opacity without being asked.
+- **Default basemap and basemap registry** live only in `config/basemaps.ts`. Google Maps/Satellite entries only activate when `NEXT_PUBLIC_GOOGLE_MAPS_KEY` is set.
+- **CRS model**: internal storage/API is WGS84 (EPSG:4326) GeoJSON. Map display projection is Web Mercator (EPSG:3857). UTM zone is derived from longitude at display time (`lib/crs.ts`) — Zambia spans UTM zones 35S/36S.
+- **Coordinate search** accepts decimal degrees, DMS, and UTM; parsing lives in `lib/coord-parse.ts`. Point-in-polygon uses PostGIS `ST_Contains` via `api/query/point` (or the local provider's Turf equivalent), never a client-side fallback for authoritative results in the Supabase-backed path.
+- **Geometry**: all licence geometries are `MultiPolygon` in EPSG:4326 in the `licences.geom` column (GiST-indexed).
+- **Dark mode**: toggled via Zustand (`theme`), applied as a `.dark` class on `<html>`. The top bar and status bar are hardcoded navy in light mode (`bg-brand-navy`) but must carry a `dark:bg-card` (or equivalent semantic-token) override so they match the sidebar's dark shade — never leave a literal hex background on those two bars without a `dark:` counterpart. Similarly, any literal text color (`text-slate-600`, `text-brand-navy`, etc.) applied to text that sits on a background using a semantic token (`bg-card`, `bg-popover`, `bg-background`) needs a `dark:text-*` companion — semantic tokens (`text-muted-foreground`, `text-foreground`) already flip automatically and don't need one. This was audited once already (see todo.md's issues log for the specific bugs found); keep it in mind for new components.
+- **LeftPanel background is `bg-slate-100` in light mode** (a deliberate light grey, not `bg-card`/white) and `dark:bg-card` in dark mode — don't change this back to plain `bg-card` for light mode.
+- **Layer settings persist across page reloads; map view never does.** `useMapStore` is wrapped in Zustand's `persist` middleware (`skipHydration: true`, rehydrated manually in `AppShell`'s mount effect to avoid an SSR hydration mismatch), `partialize`d to exactly: `basemapId`, the three boundary visibility+opacity pairs, `licenceOpacity`, `statusVisibility`. **Do not add other fields to that `partialize` list** (selection, active tool, search filters, map pan/zoom, mouse position) — those must reset fresh on every page load by design. The map's initial view is never persisted anywhere; it's always computed fresh from `HOME_EXTENT_LONLAT`, which is what makes "refresh keeps layer settings but always recenters on Zambia" work without any extra reset logic.
+
+## Security / Safety Notes
+- Supabase **service-role key** is used only in the seed script (server-side, never shipped to the client). The app uses the **anon key** with RLS read-only policies.
+- No destructive DB operations run outside `supabase/migrations` and `supabase/seed` — confirm before running any ad-hoc SQL against the live project.
+- Env values are never committed; only names are documented (see below / `.env.local.example`).
+
+## Environment Variables
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only, used by seed script)
+- `NEXT_PUBLIC_GOOGLE_MAPS_KEY` (optional — enables Google basemaps when set)
+
+## Commands
+- `npm run dev` — start dev server
+- `npm run build` — production build
+- `npm run lint` — ESLint
+- `npm run typecheck` — `tsc --noEmit`
+- `npm run seed` — run `supabase/seed/seed.ts` against the configured Supabase project
+- `npm run generate:licences` — regenerate `lib/data/licences.generated.json` from `scripts/generate-licences.ts`
+
+## Project Documentation Files
+Four working files, each with a distinct job:
+- **CLAUDE.md** (this file) — always-true rules, auto-loaded every turn. Update only when conventions/architecture genuinely change.
+- **plan.md** — the architectural plan agreed at project start. Historical record; never overwritten after approval (append "Plan v2" sections instead).
+- **todo.md** — the living checklist, grouped by area, with status markers `[ ]`/`[~]`/`[x]`/`[!]` and an "Issues encountered & fixed" log. Update continuously.
+- **session.md** — snapshot of conversation-only state (service IDs, live-environment quirks, ad-hoc migrations, open work). Updated only at `/clear` or on explicit request — otherwise leave alone.
+
+Resume order in a fresh session: CLAUDE.md (auto) → todo.md → session.md → plan.md.
+
+## Out of Scope
+Licence application/renewal/transfer workflows, payments, approvals, document management, user/admin modules unrelated to map visualization. Also deferred to a later phase (not built in v1): Shapefile/KML/GPX import, PNG/PDF map export, vector-tile rendering, geometry simplification by zoom, Web Workers, bbox/lazy-loading, layer drag-ordering, ST_Union/ST_Intersection overlay tools, 100k+ feature scale tuning.
