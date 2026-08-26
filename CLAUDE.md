@@ -64,7 +64,7 @@ This means `npm run dev` works immediately with **zero external setup** — no S
 - **`pointermove` handling is `requestAnimationFrame`-throttled, not run per raw event.** `MapCanvas.tsx` stashes only the latest event and does the actual work (mouse-position store update, tool-overlay rebuild, live-measurement calc, hover hit-test) inside an rAF callback, capping it to ~60/sec regardless of how fast the browser fires raw pointer events (100-200+/sec is normal on modern hardware). This exists because it was a real, user-reported lag bug — anything added to that hot path (new tool behavior, new HUD content, etc.) must go inside `processPointerMove`, not as a second uncapped `map.on("pointermove", ...)` listener, or the same lag comes back.
 - **Basemap switching is a floating control** (`components/map/controls/BasemapSwitcher.tsx`, bottom-center of the map canvas, per the reference design) — not in the Layers tab.
 - **Administrative boundaries have three independent layers**, each with its own visibility toggle + opacity slider in the Layers tab: Zambia Boundary (national), Province Boundaries, District Boundaries. Store fields: `show*Boundary(ies)` / `*BoundaryOpacity` for `national`/`province`/`district`. **All layers (boundaries + licence statuses) default to fully on, full opacity** — see `DEFAULT_STATUS_VISIBILITY` in `lib/theme.ts` and the defaults in `store/useMapStore.ts`. Don't reintroduce a status/layer defaulting to hidden or partial opacity without being asked.
-- **Default basemap and basemap registry** live only in `config/basemaps.ts`. Google Maps/Satellite entries only activate when `NEXT_PUBLIC_GOOGLE_MAPS_KEY` is set.
+- **Default basemap and basemap registry** live only in `config/basemaps.ts`. Google Maps/Satellite entries only activate when `NEXT_PUBLIC_GOOGLE_MAPS_KEY` is set; Mapbox Streets/Satellite only activate when `NEXT_PUBLIC_MAPBOX_TOKEN` is set. `DEFAULT_BASEMAP_ID` itself is conditional on that token too — Mapbox once configured, OSM otherwise — because OpenStreetMap's raw tile server (`tile.openstreetmap.org`) is dev-only: its usage policy disallows production/bulk traffic and it will throttle or silently drop requests under real load (this was diagnosed directly — see todo.md's basemap-tile-loading entry). Don't change the production default back to plain `"osm"`.
 - **CRS model**: internal storage/API is WGS84 (EPSG:4326) GeoJSON. Map display projection is Web Mercator (EPSG:3857). UTM zone is derived from longitude at display time (`lib/crs.ts`) — Zambia spans UTM zones 35S/36S.
 - **Coordinate search** accepts decimal degrees, DMS, and UTM; parsing lives in `lib/coord-parse.ts`. Point-in-polygon uses PostGIS `ST_Contains` via `api/query/point` (or the local provider's Turf equivalent), never a client-side fallback for authoritative results in the Supabase-backed path.
 - **Geometry**: all licence geometries are `MultiPolygon` in EPSG:4326 in the `licences.geom` column (GiST-indexed).
@@ -80,8 +80,10 @@ This means `npm run dev` works immediately with **zero external setup** — no S
 ## Environment Variables
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (server-only, used by seed script)
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only, used by seed script — never set this in Vercel/any deployed runtime env)
 - `NEXT_PUBLIC_GOOGLE_MAPS_KEY` (optional — enables Google basemaps when set)
+- `NEXT_PUBLIC_MAPBOX_TOKEN` (optional locally, recommended in production — enables Mapbox basemaps and becomes the default basemap when set)
+- `NEXT_PUBLIC_SENTRY_DSN` (optional — enables Sentry error monitoring when set)
 
 ## Commands
 - `npm run dev` — start dev server
@@ -102,3 +104,13 @@ Resume order in a fresh session: CLAUDE.md (auto) → todo.md → session.md →
 
 ## Out of Scope
 Licence application/renewal/transfer workflows, payments, approvals, document management, user/admin modules unrelated to map visualization. Also deferred to a later phase (not built in v1): Shapefile/KML/GPX import, PNG/PDF map export, vector-tile rendering, geometry simplification by zoom, Web Workers, bbox/lazy-loading, layer drag-ordering, ST_Union/ST_Intersection overlay tools, 100k+ feature scale tuning.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

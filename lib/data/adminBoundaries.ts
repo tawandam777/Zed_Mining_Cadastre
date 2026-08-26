@@ -17,9 +17,9 @@ let cached: Promise<AdminBoundaries> | null = null;
 
 async function build(): Promise<AdminBoundaries> {
   const [nationalRaw, provincesRaw, districtsRaw] = await Promise.all([
-    loadShapefile("Admin_Bounds/Zambia Boundary", "Zambia Boundary"),
-    loadShapefile("Admin_Bounds/Zambia Provinces", "Zambia Provinces"),
-    loadShapefile("Admin_Bounds/Zambia Districts", "Zambia Districts"),
+    loadShapefile("Zambia Boundary", "Zambia Boundary"),
+    loadShapefile("Zambia Provinces", "Zambia Provinces"),
+    loadShapefile("Zambia Districts", "Zambia Districts"),
   ]);
 
   const national: GeoJSON.FeatureCollection = {
