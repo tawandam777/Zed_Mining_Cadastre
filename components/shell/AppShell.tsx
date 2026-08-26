@@ -18,6 +18,7 @@ import { Toaster } from "@/components/shell/Toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useMapStore } from "@/store/useMapStore";
 import { useLicences } from "@/lib/useLicences";
+import { useBoundaries } from "@/lib/useBoundaries";
 
 const MapCanvas = dynamic(() => import("@/components/map/MapCanvas"), { ssr: false });
 
@@ -30,6 +31,7 @@ export function AppShell() {
   const setTheme = useMapStore((s) => s.setTheme);
   const setLeftOpen = useMapStore((s) => s.setLeftOpen);
   const licences = useLicences();
+  const boundaries = useBoundaries();
 
   const rightPanelOpen = Boolean(selectedLicenceId) || toolSelectionIds.length > 0;
   const rehydratedRef = useRef(false);
@@ -78,11 +80,13 @@ export function AppShell() {
               <FloatingLegend />
               <HelpButton />
               <Toaster />
-              {!licences && (
+              {(!licences || !boundaries) && (
                 <div className="bg-background/70 dark:bg-background/60 pointer-events-none absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[1px]">
                   <div className="border-border bg-popover flex items-center gap-2.5 rounded-md border px-4 py-2.5 shadow-md">
                     <span className="border-muted-foreground/30 border-t-brand-accent h-4 w-4 animate-spin rounded-full border-2" />
-                    <span className="text-muted-foreground text-[12.5px]">Loading licence data…</span>
+                    <span className="text-muted-foreground text-[12.5px]">
+                      {!boundaries ? "Loading boundaries…" : "Loading licence data…"}
+                    </span>
                   </div>
                 </div>
               )}

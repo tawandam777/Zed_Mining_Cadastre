@@ -22,6 +22,7 @@ import { computeLiveMeasurementText } from "@/components/tools/liveMeasurement";
 import { HOME_EXTENT_LONLAT } from "@/config/app.config";
 import { computeScale } from "@/lib/scale";
 import { useLicences } from "@/lib/useLicences";
+import { useBoundaries } from "@/lib/useBoundaries";
 
 interface HoverInfo {
   x: number;
@@ -47,6 +48,7 @@ export default function MapCanvas() {
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [measureHud, setMeasureHud] = useState<MeasureHud | null>(null);
   const licences = useLicences();
+  const boundaries = useBoundaries();
   const prevHoveredIdRef = useRef<string | null>(null);
 
   const basemapId = useMapStore((s) => s.basemapId);
@@ -115,9 +117,8 @@ export default function MapCanvas() {
 
     mapRef.current = map;
 
-    boundaryLayersApi.current.refresh().catch(console.error);
-    // Licence features come from the shared `useLicences()` cache (see the effect below) rather
-    // than a separate fetch here — avoids double-fetching /api/licences on every page load.
+    // Boundary and licence features come from the shared useBoundaries()/useLicences() caches
+    // (see the effects below) rather than a separate fetch here — avoids double-fetching.
 
     const updateViewInfo = () => {
       const view = map.getView();
@@ -264,6 +265,11 @@ export default function MapCanvas() {
   useEffect(() => {
     if (licences) licenceLayerApi.current.setData(licences);
   }, [licences]);
+
+  // ---- boundary data (loaded once via the shared useBoundaries() cache) ----
+  useEffect(() => {
+    if (boundaries) boundaryLayersApi.current.setData(boundaries);
+  }, [boundaries]);
 
   // ---- licence styling (base pass — deliberately excludes hover) ----
   // Hover is handled by a separate, cheap per-feature effect below. If hover were included
