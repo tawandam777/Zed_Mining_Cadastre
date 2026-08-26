@@ -105,8 +105,8 @@ export function AttributeTable() {
 
   return (
     <div className="border-border bg-card animate-in fade-in slide-in-from-bottom-4 flex h-72 min-h-72 flex-col border-t duration-200">
-      <div className="border-border flex items-center gap-3 border-b px-4 py-2">
-        <span className="text-[12.5px] font-semibold">Attribute Table</span>
+      <div className="border-border flex items-center gap-2 border-b px-2 py-2 sm:gap-3 sm:px-4">
+        <span className="hidden text-[12.5px] font-semibold sm:inline">Attribute Table</span>
         <input
           value={filter}
           onChange={(e) => {
@@ -114,25 +114,27 @@ export function AttributeTable() {
             setPage(0);
           }}
           placeholder="Filter rows…"
-          className="border-border h-7 w-52 rounded-md border px-2 text-[12px] focus:outline-none"
+          className="border-border h-7 min-w-0 flex-1 rounded-md border px-2 text-[12px] focus:outline-none sm:w-52 sm:flex-none"
         />
-        <span className="text-muted-foreground font-mono text-[11px]">
+        <span className="text-muted-foreground hidden font-mono text-[11px] sm:inline">
           {filtered.length} row{filtered.length === 1 ? "" : "s"}
         </span>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <button
             type="button"
             onClick={exportCsv}
+            title="Export CSV"
             className="border-border hover:bg-accent flex items-center gap-1 rounded-md border px-2 py-1 text-[11.5px]"
           >
-            <Download className="h-3 w-3" /> CSV
+            <Download className="h-3 w-3" /> <span className="hidden sm:inline">CSV</span>
           </button>
           <button
             type="button"
             onClick={exportGeoJson}
+            title="Export GeoJSON"
             className="border-border hover:bg-accent flex items-center gap-1 rounded-md border px-2 py-1 text-[11.5px]"
           >
-            <Download className="h-3 w-3" /> GeoJSON
+            <Download className="h-3 w-3" /> <span className="hidden sm:inline">GeoJSON</span>
           </button>
           <button type="button" onClick={toggleAttributeTable} aria-label="Close attribute table">
             <X className="text-muted-foreground h-4 w-4" />

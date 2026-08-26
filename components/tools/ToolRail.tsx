@@ -44,7 +44,7 @@ export function ToolRail() {
                 type="button"
                 onClick={() => setActiveTool(id)}
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center border-b border-border last:border-b-0",
+                  "flex h-11 w-11 items-center justify-center border-b border-border last:border-b-0 sm:h-9 sm:w-9",
                   activeTool === id
                     ? "bg-brand-accent text-white"
                     : "hover:bg-accent text-slate-600 dark:text-slate-300",
@@ -64,7 +64,7 @@ export function ToolRail() {
               <button
                 type="button"
                 onClick={handleClear}
-                className="hover:bg-accent flex h-9 w-9 items-center justify-center text-slate-500 dark:text-slate-300"
+                className="hover:bg-accent flex h-11 w-11 items-center justify-center text-slate-500 sm:h-9 sm:w-9 dark:text-slate-300"
               />
             }
           >

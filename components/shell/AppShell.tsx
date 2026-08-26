@@ -28,20 +28,15 @@ export function AppShell() {
   const attributeTableOpen = useMapStore((s) => s.attributeTableOpen);
   const theme = useMapStore((s) => s.theme);
   const setTheme = useMapStore((s) => s.setTheme);
+  const setLeftOpen = useMapStore((s) => s.setLeftOpen);
   const licences = useLicences();
 
   const rightPanelOpen = Boolean(selectedLicenceId) || toolSelectionIds.length > 0;
+  const rehydratedRef = useRef(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
-
-  // Persisted layer settings (basemap, boundary/licence opacity, status visibility) are
-  // read from localStorage only after mount — skipHydration on the store avoids a
-  // server/client hydration mismatch (localStorage isn't available during SSR).
-  useEffect(() => {
-    void useMapStore.persist.rehydrate();
-  }, []);
 
   // Theme itself is intentionally not persisted (see the store's partialize comment), so
   // every fresh load otherwise defaults to light — seed it from the OS preference instead
@@ -49,6 +44,23 @@ export function AppShell() {
   useEffect(() => {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
   }, [setTheme]);
+
+  // Persisted layer settings (basemap, boundary/licence opacity, status visibility) are
+  // read from localStorage only after mount — skipHydration on the store avoids a
+  // server/client hydration mismatch (localStorage isn't available during SSR). leftOpen
+  // isn't itself persisted, but the mobile-default-closed adjustment below has to wait for
+  // rehydrate() to resolve first — it's async, and applying it before rehydrate finishes
+  // risks whatever rehydrate's own merge does clobbering it back to the true default. Guarded
+  // to run exactly once: React Strict Mode double-invokes effects in dev, and two concurrent
+  // rehydrate() calls racing each other reintroduced the exact clobbering this was meant to
+  // avoid — setLeftOpen(false) from the first call's resolution got stomped by the second.
+  useEffect(() => {
+    if (rehydratedRef.current) return;
+    rehydratedRef.current = true;
+    void Promise.resolve(useMapStore.persist.rehydrate()).then(() => {
+      if (window.matchMedia("(max-width: 767px)").matches) setLeftOpen(false);
+    });
+  }, [setLeftOpen]);
 
   return (
     <TooltipProvider delay={300}>

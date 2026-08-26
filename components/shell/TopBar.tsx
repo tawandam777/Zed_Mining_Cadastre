@@ -14,12 +14,6 @@ const CRS_LABELS: Record<CoordinateFormat, string> = {
   utm: "UTM · WGS 84",
 };
 
-const CRS_LABELS_SHORT: Record<CoordinateFormat, string> = {
-  dd: "DD",
-  dms: "DMS",
-  utm: "UTM",
-};
-
 export function TopBar({ shellRef }: { shellRef: RefObject<HTMLDivElement | null> }) {
   const toggleLeftPanel = useMapStore((s) => s.toggleLeftPanel);
   const theme = useMapStore((s) => s.theme);
@@ -48,11 +42,9 @@ export function TopBar({ shellRef }: { shellRef: RefObject<HTMLDivElement | null
 
       <div className="flex shrink-0 items-center gap-2.5">
         <div className="bg-brand-amber h-[26px] w-[26px] shrink-0 rotate-45 rounded-md" />
-        <div className="leading-tight">
+        <div className="hidden leading-tight sm:block">
           <div className="text-[15px] font-semibold text-slate-50">Mining Cadastre</div>
-          <div className="hidden text-[11px] tracking-wide text-slate-400 uppercase sm:block">
-            Zambia · Licence Map
-          </div>
+          <div className="text-[11px] tracking-wide text-slate-400 uppercase">Zambia · Licence Map</div>
         </div>
       </div>
 
@@ -68,11 +60,10 @@ export function TopBar({ shellRef }: { shellRef: RefObject<HTMLDivElement | null
           <button
             type="button"
             onClick={cycleCoordFormat}
-            className="flex h-full items-center px-2.5 text-[11px] font-semibold text-blue-300 hover:bg-white/10"
+            className="hidden h-full items-center px-2.5 text-[11px] font-semibold text-blue-300 hover:bg-white/10 sm:flex"
             title="Click to cycle coordinate format"
           >
-            <span className="hidden sm:inline">{CRS_LABELS[coordFormat]}</span>
-            <span className="sm:hidden">{CRS_LABELS_SHORT[coordFormat]}</span>
+            {CRS_LABELS[coordFormat]}
           </button>
           <button
             type="button"

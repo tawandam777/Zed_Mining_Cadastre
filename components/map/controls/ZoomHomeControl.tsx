@@ -12,7 +12,7 @@ export function ZoomHomeControl() {
         type="button"
         onClick={zoomIn}
         aria-label="Zoom in"
-        className="hover:bg-accent flex h-8 w-8 items-center justify-center border-b border-border"
+        className="hover:bg-accent flex h-11 w-11 items-center justify-center border-b border-border sm:h-8 sm:w-8"
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -20,7 +20,7 @@ export function ZoomHomeControl() {
         type="button"
         onClick={zoomOut}
         aria-label="Zoom out"
-        className="hover:bg-accent flex h-8 w-8 items-center justify-center border-b border-border"
+        className="hover:bg-accent flex h-11 w-11 items-center justify-center border-b border-border sm:h-8 sm:w-8"
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -28,7 +28,7 @@ export function ZoomHomeControl() {
         type="button"
         onClick={resetHome}
         aria-label="Reset to home extent"
-        className="hover:bg-accent flex h-8 w-8 items-center justify-center"
+        className="hover:bg-accent flex h-11 w-11 items-center justify-center sm:h-8 sm:w-8"
       >
         <Home className="h-4 w-4" />
       </button>

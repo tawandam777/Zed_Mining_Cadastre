@@ -35,7 +35,7 @@ export function HelpButton() {
   }
 
   return (
-    <div className="absolute top-40 right-3 z-10">
+    <div className="absolute top-52 right-3 z-10 sm:top-40">
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger
           render={
@@ -43,7 +43,7 @@ export function HelpButton() {
               type="button"
               aria-label="Help"
               title="Help"
-              className="border-border bg-popover hover:bg-accent flex h-9 w-9 items-center justify-center rounded-md border text-slate-600 shadow-md dark:text-slate-300"
+              className="border-border bg-popover hover:bg-accent flex h-11 w-11 items-center justify-center rounded-md border text-slate-600 shadow-md sm:h-9 sm:w-9 dark:text-slate-300"
             />
           }
         >
