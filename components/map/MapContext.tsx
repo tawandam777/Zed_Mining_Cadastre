@@ -63,7 +63,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
         if (!view) return;
         view.animate({ center: fromLonLat([lon, lat]), zoom, duration: 400 });
       },
-      zoomToExtentLonLat: (extent, padding = [60, 60, 60, 60]) => {
+      zoomToExtentLonLat: (extent, padding = [100, 100, 100, 100]) => {
         const view = mapRef.current?.getView();
         if (!view) return;
         const mapExtent = [...fromLonLat([extent[0], extent[1]]), ...fromLonLat([extent[2], extent[3]])] as [
@@ -72,7 +72,10 @@ export function MapProvider({ children }: { children: ReactNode }) {
           number,
           number,
         ];
-        view.fit(mapExtent, { duration: 400, padding, maxZoom: 16 });
+        // maxZoom 15 (was 16) + wider padding (was 60px) so zooming to a single small licence
+        // parcel (search result, "Zoom to Feature", etc.) leaves visible surrounding context
+        // instead of filling the whole viewport with just that one polygon.
+        view.fit(mapExtent, { duration: 400, padding, maxZoom: 15 });
       },
       rotateToNorth: () => {
         mapRef.current?.getView().animate({ rotation: 0, duration: 250 });

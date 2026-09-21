@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HelpCircle } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HelpCircle, XIcon } from "lucide-react";
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 const SEEN_KEY = "mining-cadastre-help-seen";
 
@@ -49,7 +50,14 @@ export function HelpButton() {
         >
           <HelpCircle className="h-4 w-4" />
         </PopoverTrigger>
-        <PopoverContent align="end">
+        <PopoverContent align="end" className="relative pr-7">
+          <PopoverClose
+            data-slot="popover-close"
+            render={<Button variant="ghost" className="absolute top-1.5 right-1.5" size="icon-sm" />}
+            aria-label="Close"
+          >
+            <XIcon className="h-3.5 w-3.5" />
+          </PopoverClose>
           <div className="text-[12.5px] font-semibold">Getting started</div>
           <ul className="text-muted-foreground flex flex-col gap-1.5 text-[12px] leading-snug">
             <li>

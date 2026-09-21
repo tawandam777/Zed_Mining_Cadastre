@@ -8,7 +8,11 @@ const format = new GeoJSON({ featureProjection: "EPSG:3857", dataProjection: "EP
 
 export function createLicenceLayer() {
   const source = new VectorSource();
-  const layer = new VectorLayer({ source, properties: { id: "licences" } });
+  // declutter: true hides overlapping licence-number labels instead of letting them stack
+  // illegibly on top of each other — the default has every label always rendered regardless
+  // of zoom, which is unreadable in the North-Western/Copperbelt clusters where most licences
+  // concentrate (CLAUDE.md). Only affects text/icon rendering, not the polygon fills/strokes.
+  const layer = new VectorLayer({ source, declutter: true, properties: { id: "licences" } });
   const featuresById = new Map<string, Feature>();
 
   /** Populates the layer from GeoJSON already fetched elsewhere (the shared `useLicences()` cache) — this layer no longer fetches on its own. */
