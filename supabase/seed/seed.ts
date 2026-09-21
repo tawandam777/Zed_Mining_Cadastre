@@ -2,8 +2,8 @@
  * Seeds Supabase/PostGIS with:
  *  - the regenerated mining-licence dataset (lib/data/licences.generated.json —
  *    see scripts/generate-licences.ts for how it was produced), and
- *  - the real Zambia admin boundaries (national / province / district) read
- *    directly from the Admin_Bounds/*.shp shapefiles.
+ *  - the real Zambia admin boundaries (national / province / district) from
+ *    lib/data/boundaries.generated.json (see scripts/generate-boundaries.ts).
  *
  * Usage: npm run seed
  */
@@ -60,7 +60,7 @@ async function main() {
     };
   });
 
-  console.log("Loading admin boundary shapefiles (national/provinces/districts)...");
+  console.log("Loading generated admin boundaries (national/provinces/districts)...");
   const { national, provinces, districts } = await getAdminBoundaries();
 
   const boundaryRows = [

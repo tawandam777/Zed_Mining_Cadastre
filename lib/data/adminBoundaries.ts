@@ -1,5 +1,5 @@
 import * as turf from "@turf/turf";
-import { loadShapefile } from "./shapefileLoader";
+import boundariesGenerated from "./boundaries.generated.json";
 
 export interface NamedFeature {
   name: string;
@@ -13,41 +13,17 @@ interface AdminBoundaries {
   provinceList: NamedFeature[];
 }
 
-let cached: Promise<AdminBoundaries> | null = null;
+// Pre-simplified and committed by scripts/generate-boundaries.ts — see that
+// file for why (the raw Admin_Bounds/*.shp shapefiles are ~40MB of GeoJSON
+// once converted, which is what made boundary loading slow; parsing them at
+// request time is no longer necessary once the result is static).
+let cached: AdminBoundaries | null = null;
 
-async function build(): Promise<AdminBoundaries> {
-  const [nationalRaw, provincesRaw, districtsRaw] = await Promise.all([
-    loadShapefile("Zambia Boundary", "Zambia Boundary"),
-    loadShapefile("Zambia Provinces", "Zambia Provinces"),
-    loadShapefile("Zambia Districts", "Zambia Districts"),
-  ]);
-
-  const national: GeoJSON.FeatureCollection = {
-    type: "FeatureCollection",
-    features: nationalRaw.features.map((f) => ({
-      ...f,
-      properties: { name: "Zambia", kind: "national" },
-    })),
-  };
-
-  const provinces: GeoJSON.FeatureCollection = {
-    type: "FeatureCollection",
-    features: provincesRaw.features.map((f) => ({
-      ...f,
-      properties: { name: f.properties?.adm1_name, kind: "province" },
-    })),
-  };
-
-  const districts: GeoJSON.FeatureCollection = {
-    type: "FeatureCollection",
-    features: districtsRaw.features.map((f) => ({
-      ...f,
-      properties: {
-        name: f.properties?.adm2_name,
-        province: f.properties?.adm1_name,
-        kind: "district",
-      },
-    })),
+function build(): AdminBoundaries {
+  const { national, provinces, districts } = boundariesGenerated as unknown as {
+    national: GeoJSON.FeatureCollection;
+    provinces: GeoJSON.FeatureCollection;
+    districts: GeoJSON.FeatureCollection;
   };
 
   const provinceList: NamedFeature[] = provinces.features.map((f) => ({
@@ -58,7 +34,7 @@ async function build(): Promise<AdminBoundaries> {
   return { national, provinces, districts, provinceList };
 }
 
-export function getAdminBoundaries(): Promise<AdminBoundaries> {
+export async function getAdminBoundaries(): Promise<AdminBoundaries> {
   if (!cached) cached = build();
   return cached;
 }

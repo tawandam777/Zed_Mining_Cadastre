@@ -35,26 +35,27 @@ lib/                    supabase client/server, theme tokens, crs.ts, coord-pars
 store/useMapStore.ts    Zustand store
 supabase/
   migrations/           PostGIS schema + RPC functions
-  seed/                 Seed script (real shapefiles + generated licences -> PostGIS)
+  seed/                 Seed script (generated boundaries + generated licences -> PostGIS)
 scripts/
-  generate-licences.ts  One-off generator -> lib/data/licences.generated.json (see below)
-Admin_Bounds/           Real Zambia admin boundary shapefiles (national/province/district)
+  generate-licences.ts   One-off generator -> lib/data/licences.generated.json (see below)
+  generate-boundaries.ts One-off generator -> lib/data/boundaries.generated.json (see below)
+Admin_Bounds/           Real Zambia admin boundary shapefiles (national/province/district) —
+                        source data for generate-boundaries.ts, not read at runtime
 ```
 
 ## Data provider (offline-first)
 Every API route calls `getProvider()` from `lib/data/index.ts` instead of talking to Supabase directly. It returns:
 - **`supabaseProvider`** (`lib/data/supabaseProvider.ts`) when `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set — calls the real PostGIS RPCs.
-- **`localProvider`** (`lib/data/localProvider.ts`) otherwise — a fully offline, in-memory provider that serves `lib/data/licences.generated.json` and the real `Admin_Bounds/*.shp` shapefiles (via `lib/data/adminBoundaries.ts`), answering spatial queries with Turf.js instead of PostGIS.
+- **`localProvider`** (`lib/data/localProvider.ts`) otherwise — a fully offline, in-memory provider that serves `lib/data/licences.generated.json` and `lib/data/boundaries.generated.json` (via `lib/data/adminBoundaries.ts`), answering spatial queries with Turf.js instead of PostGIS.
 
 This means `npm run dev` works immediately with **zero external setup** — no Supabase project, no Docker, no Git even required to develop the app itself. The two providers implement the same `DataProvider` interface (`lib/data/types.ts`), so switching between them is just an env var away and requires no component changes.
 
 **Known accuracy trade-off**: `localProvider`'s nearest/within-distance/buffer queries use each licence's **centroid**, not full-polygon distance like PostGIS's `ST_Distance`/`ST_DWithin`. Fine for offline dev with ~55 features; treat `supabaseProvider` as the accurate/production path.
 
-**Deployment note (not yet relevant, offline dev only):** `lib/data/shapefileLoader.ts` reads `Admin_Bounds/*.shp` files via `fs.readFileSync(path.resolve(process.cwd(), ...))`. Turbopack's file tracer can't statically determine which files that touches, so it falls back to tracing the whole project (a build-time warning, not an error). Before deploying, add an explicit `outputFileTracingIncludes` entry in `next.config.ts` for the boundary-serving routes so only `Admin_Bounds/**` and `lib/data/licences.generated.json` ship in the serverless bundle, not the whole repo.
-
 ## Admin boundaries & licence geometry (real data, not hand-drawn)
-- **Boundaries** come from `Admin_Bounds/{Zambia Boundary,Zambia Provinces,Zambia Districts}/*.shp` (COD-AB style, WGS84, no reprojection needed). `lib/data/shapefileLoader.ts` reads them as buffers (not file paths — see the Turbopack note above) via the `shapefile` npm package; `lib/data/adminBoundaries.ts` tags each feature with `kind: national|province|district` and caches the parsed result per process. Province names use the shapefile's exact spelling, e.g. **"North-Western"** (hyphenated).
-- **Licence geometry is generated, not hand-drawn.** `scripts/generate-licences.ts` (run via `npx tsx scripts/generate-licences.ts`) takes the licence *attributes* (owner, commodity, status, type, area, dates, licence number — from the original `ref/project/cadastre-data.js` mock) and produces entirely new polygons: a shelf/skyline bin-packing algorithm sizes each rectangle from the licence's real `area_ha`, tiles them edge-to-edge (with a small ~90m gap — see the file's `GAP_DEG` comment for why exact-touching edges are numerically fragile) within North-Western and Copperbelt provinces (the majority) and scattered singly across the other 8, then verifies everything against the real national boundary. Output is committed to `lib/data/licences.generated.json` — treat that file as generated/derived, re-run the script (not hand-edited) if the packing logic changes. The `province` property on every licence is recomputed via real point-in-polygon lookup against the province shapefile, not inherited from the old mock data.
+- **Boundaries are generated, not read from shapefiles at runtime.** The real Zambia admin boundary shapefiles (`Admin_Bounds/{Zambia Boundary,Zambia Provinces,Zambia Districts}/*.shp`, COD-AB style, WGS84) convert to ~40MB of GeoJSON — that raw size, parsed via the `shapefile` npm package + remapped with Turf on every request, was the actual cause of slow boundary loading (not just missing loading feedback — see todo.md's "Boundaries taking long to load" entry). `scripts/generate-boundaries.ts` (run via `npx tsx scripts/generate-boundaries.ts`, using `lib/data/shapefileLoader.ts` to read the raw `.shp`/`.dbf` buffers) simplifies province and district geometry with `turf.simplify` (province tolerance ~55m, district tolerance ~111m — both display-only geometry, never used for point-in-polygon or other authoritative ops) and writes the result to committed `lib/data/boundaries.generated.json` (~4MB, down from ~40MB). National boundary is left unsimplified (a single small feature, and `generate-licences.ts` relies on it for exact containment checks). `lib/data/adminBoundaries.ts` imports that generated file directly (same "static import, no runtime parsing" pattern as licences below) and tags each feature with `kind: national|province|district`. Province names use the shapefile's exact spelling, e.g. **"North-Western"** (hyphenated). `shapefileLoader.ts`/the `shapefile` package (a devDependency) are only ever used by the generate script now, not at runtime — `Admin_Bounds/*.shp` is source data for that script, not something any deployed route reads.
+- To regenerate: `npx tsx scripts/generate-boundaries.ts`, then restart the dev server (the JSON is imported as a module, so Next needs to reload it).
+- **Licence geometry is generated, not hand-drawn.** `scripts/generate-licences.ts` (run via `npx tsx scripts/generate-licences.ts`) takes the licence *attributes* (owner, commodity, status, type, area, dates, licence number — from the original `ref/project/cadastre-data.js` mock) and produces entirely new polygons: a shelf/skyline bin-packing algorithm sizes each rectangle from the licence's real `area_ha`, tiles them edge-to-edge (with a small ~90m gap — see the file's `GAP_DEG` comment for why exact-touching edges are numerically fragile) within North-Western and Copperbelt provinces (the majority) and scattered singly across the other 8, then verifies everything against the real national boundary. Output is committed to `lib/data/licences.generated.json` — treat that file as generated/derived, re-run the script (not hand-edited) if the packing logic changes. The `province` property on every licence is recomputed via real point-in-polygon lookup against the (generated) province geometry, not inherited from the old mock data.
 - To regenerate: `npx tsx scripts/generate-licences.ts`, then restart the dev server (the JSON is imported as a module, so Next needs to reload it).
 
 ## Domain Conventions
@@ -94,6 +95,7 @@ This means `npm run dev` works immediately with **zero external setup** — no S
 - `npm run typecheck` — `tsc --noEmit`
 - `npm run seed` — run `supabase/seed/seed.ts` against the configured Supabase project
 - `npm run generate:licences` — regenerate `lib/data/licences.generated.json` from `scripts/generate-licences.ts`
+- `npm run generate:boundaries` — regenerate `lib/data/boundaries.generated.json` from `scripts/generate-boundaries.ts`
 
 ## Project Documentation Files
 Four working files, each with a distinct job:
