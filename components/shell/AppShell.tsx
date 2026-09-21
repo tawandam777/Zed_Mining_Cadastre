@@ -81,13 +81,11 @@ export function AppShell() {
               <HelpButton />
               <Toaster />
               {(!licences || !boundaries) && (
-                <div className="bg-background/70 dark:bg-background/60 pointer-events-none absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[1px]">
-                  <div className="border-border bg-popover flex items-center gap-2.5 rounded-md border px-4 py-2.5 shadow-md">
-                    <span className="border-muted-foreground/30 border-t-brand-accent h-4 w-4 animate-spin rounded-full border-2" />
-                    <span className="text-muted-foreground text-[12.5px]">
-                      {!boundaries ? "Loading boundaries…" : "Loading licence data…"}
-                    </span>
-                  </div>
+                <div className="border-border bg-popover pointer-events-none absolute bottom-16 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2.5 rounded-md border px-4 py-2.5 shadow-md">
+                  <span className="border-muted-foreground/30 border-t-brand-accent h-4 w-4 animate-spin rounded-full border-2" />
+                  <span className="text-muted-foreground text-[12.5px]">
+                    {!boundaries ? "Loading boundaries…" : "Loading licence data…"}
+                  </span>
                 </div>
               )}
             </div>
