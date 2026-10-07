@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Map from "ol/Map";
 import type MapBrowserEvent from "ol/MapBrowserEvent";
+import type { Coordinate } from "ol/coordinate";
 import View from "ol/View";
 import ScaleLine from "ol/control/ScaleLine";
 import OverviewMap from "ol/control/OverviewMap";
 import Rotate from "ol/control/Rotate";
-import type Snap from "ol/interaction/Snap";
 import { fromLonLat, toLonLat } from "ol/proj";
 import { defaults as defaultInteractions } from "ol/interaction/defaults";
 import { createBasemapLayer } from "./basemapLayer";
@@ -15,7 +15,7 @@ import { createLicenceLayer } from "./licenceLayer";
 import { createBoundaryLayers } from "./boundaryLayer";
 import { createMarkerLayer } from "./markerLayer";
 import { createToolLayer } from "./toolLayer";
-import { createSnapInteraction } from "./snapInteraction";
+import { findSnapPoint } from "./snap";
 import { licenceStyleFunction, nationalBoundaryStyle, provinceBoundaryStyle, districtBoundaryStyle } from "./styles";
 import { useMapApi } from "./MapContext";
 import { useMapStore, SKETCH_TOOLS } from "@/store/useMapStore";
@@ -40,6 +40,9 @@ interface MeasureHud {
   text: string;
 }
 
+// Matches ol/interaction/Snap's own default — see snap.ts for why this is a plain function on
+// the rAF-throttled pointermove path rather than that interaction.
+const SNAP_PIXEL_TOLERANCE = 10;
 
 export default function MapCanvas() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -80,17 +83,10 @@ export default function MapCanvas() {
   const boundaryLayersApi = useRef(createBoundaryLayers());
   const markerLayerApi = useRef(createMarkerLayer());
   const toolLayerApi = useRef(createToolLayer());
-  const snapInteractionRef = useRef<Snap | null>(null);
-  // OL's Snap has no public setter for its vertex/edge flags (constructor-only, see
-  // node_modules/ol/interaction/Snap.js) — the only way to change which kinds of snapping are
-  // enabled at runtime is to swap in a new instance. This ref remembers which (vertex, edge)
-  // combination the current instance was built with, so the effect below only pays that cost
-  // when the user actually toggles one of the two, not on every activeTool/toolFrozen change.
-  const snapFlagsRef = useRef<{ vertex: boolean; edge: boolean } | null>(null);
-  // Written directly by the Snap interaction's snap/unsnap events and read inside
-  // processPointerMove (same rAF-throttled cadence as everything else on that hot path) —
-  // a ref, not React state, so a snap/unsnap doesn't trigger its own extra render independent
-  // of the pointermove render that's already about to happen.
+  // Current snapped point (lon/lat), recomputed every animation frame inside
+  // processPointerMove — see snap.ts for why this isn't ol/interaction/Snap. A ref, not React
+  // state, since it's written and read within the same throttled callback as everything else on
+  // this hot path and doesn't need its own render.
   const snapPointRef = useRef<[number, number] | null>(null);
 
   // ---- create the map once ----
@@ -132,11 +128,6 @@ export default function MapCanvas() {
     map.addControl(overviewMapControl);
     map.addControl(rotateControl);
 
-    // Snapping itself (vertex/edge flags, active state) is set up by a separate effect below,
-    // keyed on snapToVertices/snapToEdges/activeTool/toolFrozen — not here, since those need to
-    // swap the interaction at runtime (OL's Snap has no setter for its vertex/edge flags) rather
-    // than only ever being configured once at mount.
-
     mapRef.current = map;
 
     // Boundary and licence features come from the shared useBoundaries()/useLicences() caches
@@ -161,13 +152,31 @@ export default function MapCanvas() {
     let pendingMoveEvent: MapBrowserEvent<PointerEvent | KeyboardEvent | WheelEvent> | null = null;
     let rafHandle: number | null = null;
 
+    // Snap search itself lives in snap.ts (plain, synchronous, no OL Interaction involved — see
+    // that file's header comment for why). This just gates it to sketch tools mid-sketch with at
+    // least one of snapToVertices/snapToEdges on, and converts the pixel tolerance to map units
+    // via the view's current resolution (the same conversion ol/interaction/Snap itself does).
+    function computeSnap(coordinate: Coordinate) {
+      const { activeTool: currentTool, toolFrozen: frozen, snapToVertices, snapToEdges } = useMapStore.getState();
+      if (!currentTool || frozen || !SKETCH_TOOLS.includes(currentTool)) return null;
+      if (!snapToVertices && !snapToEdges) return null;
+      const resolution = map.getView().getResolution();
+      if (!resolution) return null;
+      return findSnapPoint(licenceLayerApi.current.source, coordinate, resolution * SNAP_PIXEL_TOLERANCE, {
+        vertex: snapToVertices,
+        edge: snapToEdges,
+      });
+    }
+
     function processPointerMove() {
       rafHandle = null;
       const evt = pendingMoveEvent;
       pendingMoveEvent = null;
       if (!evt) return;
 
-      const lonLat = toLonLat(evt.coordinate) as [number, number];
+      const snapped = computeSnap(evt.coordinate);
+      const lonLat = toLonLat(snapped ?? evt.coordinate) as [number, number];
+      snapPointRef.current = snapped ? lonLat : null;
       useMapStore.getState().setMousePosition(lonLat);
 
       const { activeTool: currentTool, toolFrozen: frozen } = useMapStore.getState();
@@ -227,7 +236,8 @@ export default function MapCanvas() {
         return;
       }
       if (currentTool && !frozen) {
-        const lonLat = toLonLat(evt.coordinate) as [number, number];
+        const snapped = computeSnap(evt.coordinate);
+        const lonLat = toLonLat(snapped ?? evt.coordinate) as [number, number];
         handleMapClick(lonLat);
         return;
       }
@@ -287,9 +297,6 @@ export default function MapCanvas() {
       map.removeControl(scaleLineControl);
       map.removeControl(overviewMapControl);
       map.removeControl(rotateControl);
-      if (snapInteractionRef.current) map.removeInteraction(snapInteractionRef.current);
-      snapInteractionRef.current = null;
-      snapFlagsRef.current = null;
       map.setTarget(undefined);
       mapRef.current = null;
     };
@@ -394,7 +401,12 @@ export default function MapCanvas() {
   }, [markerPosition]);
 
   // ---- tool overlay (non-pointermove-driven refresh, e.g. clearing) ----
+  // snapToVertices/snapToEdges are deps purely to force this to re-run and clear a stale ring
+  // immediately if the user toggles one of the magnet buttons without moving the mouse
+  // afterward — snapPointRef itself is only ever written inside processPointerMove, which won't
+  // run again until the next real pointer move.
   useEffect(() => {
+    snapPointRef.current = null;
     toolLayerApi.current.update({
       tool: activeTool,
       points: toolPoints,
@@ -403,31 +415,7 @@ export default function MapCanvas() {
       previewPoint: null,
       snapPoint: null,
     });
-  }, [activeTool, toolPoints, toolFrozen, bufferCenter, bufferRadiusKm]);
-
-  // ---- snapping: (re)built when the vertex/edge flags change, active only while a sketch tool is mid-sketch ----
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    const flags = snapFlagsRef.current;
-    if (!flags || flags.vertex !== snapToVertices || flags.edge !== snapToEdges) {
-      if (snapInteractionRef.current) map.removeInteraction(snapInteractionRef.current);
-      const snap = createSnapInteraction(licenceLayerApi.current.source, { vertex: snapToVertices, edge: snapToEdges }, (pt) => {
-        snapPointRef.current = pt;
-      });
-      map.addInteraction(snap);
-      snapInteractionRef.current = snap;
-      snapFlagsRef.current = { vertex: snapToVertices, edge: snapToEdges };
-    }
-
-    const shouldBeActive =
-      (snapToVertices || snapToEdges) && !!activeTool && SKETCH_TOOLS.includes(activeTool) && !toolFrozen;
-    snapInteractionRef.current?.setActive(shouldBeActive);
-    // A deactivated interaction's handleEvent no longer runs, so no further "unsnap" event will
-    // ever clear a stale ring left over from just before deactivation — clear it here instead.
-    if (!shouldBeActive) snapPointRef.current = null;
-  }, [activeTool, toolFrozen, snapToVertices, snapToEdges, mapRef]);
+  }, [activeTool, toolPoints, toolFrozen, bufferCenter, bufferRadiusKm, snapToVertices, snapToEdges]);
 
   return (
     <div ref={containerRef} className="relative h-full w-full bg-slate-100">
