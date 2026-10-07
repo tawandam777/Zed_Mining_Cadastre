@@ -39,7 +39,10 @@ function toDms(value: number): { deg: number; min: number; sec: number } {
 }
 
 export function formatDD(lon: number, lat: number, precision = 5): string {
-  return `${lat.toFixed(precision)}, ${lon.toFixed(precision)}`;
+  return (
+    `${Math.abs(lat).toFixed(precision)}°${lat >= 0 ? "N" : "S"}, ` +
+    `${Math.abs(lon).toFixed(precision)}°${lon >= 0 ? "E" : "W"}`
+  );
 }
 
 export function formatDMS(lon: number, lat: number): string {

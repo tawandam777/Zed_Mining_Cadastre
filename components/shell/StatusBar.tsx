@@ -20,7 +20,7 @@ export function StatusBar() {
 
   return (
     <div className="bg-brand-navy border-brand-navy-border dark:bg-card dark:border-border flex h-7 min-h-7 items-center gap-4 overflow-x-auto border-t px-4 font-mono text-[11px] whitespace-nowrap text-slate-400">
-      <span>Lon/Lat: {coordText}</span>
+      <span>Position: {coordText}</span>
       <span>CRS: EPSG:4326</span>
       <span>Scale {currentScale ? formatScale(currentScale) : "—"}</span>
       <span>Zoom ×{currentZoom !== null && currentZoom !== undefined ? currentZoom.toFixed(1) : "—"}</span>

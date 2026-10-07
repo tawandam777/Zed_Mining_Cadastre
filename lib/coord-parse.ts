@@ -7,7 +7,7 @@ export interface ParsedCoordinate {
 }
 
 function tryParseUtm(input: string): ParsedCoordinate | null {
-  const m = input.trim().match(/^(\d{1,2})\s*([NnSs])\s+([\d.]+)\s+([\d.]+)$/);
+  const m = input.trim().match(/^(\d{1,2})\s*([NnSs])\s+([\d.]+)\s*[Ee]?\s+([\d.]+)\s*[Nn]?$/);
   if (!m) return null;
   const zone = Number(m[1]);
   const hemisphere = m[2].toUpperCase() as "N" | "S";
@@ -48,6 +48,29 @@ function tryParseDms(input: string): ParsedCoordinate | null {
 }
 
 function tryParseDecimal(input: string): ParsedCoordinate | null {
+  // When hemisphere letters are present (as in formatDD's own self-declaring output, e.g.
+  // "13.12345°S, 27.85432°E"), let the letters determine the axis instead of position — the
+  // positional "lat, lon" convention below can't be trusted for Zambia's longitude range
+  // (22-34), which is also a plausible latitude, so a mislabeled or reordered pair would
+  // silently parse into the wrong location rather than failing loudly.
+  const lettered = [...input.trim().matchAll(/(-?[\d.]+)\s*°?\s*([NSEWnsew])|([NSEWnsew])\s*(-?[\d.]+)\s*°?/g)];
+  if (lettered.length >= 2) {
+    let lat: number | null = null;
+    let lon: number | null = null;
+    for (const m of lettered) {
+      const letter = (m[2] ?? m[3]).toUpperCase();
+      const value = Number(m[1] ?? m[4]);
+      if (Number.isNaN(value)) return null;
+      if (letter === "N") lat = value;
+      else if (letter === "S") lat = -value;
+      else if (letter === "E") lon = value;
+      else lon = -value;
+    }
+    if (lat === null || lon === null) return null;
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    return { lon, lat, format: "dd" };
+  }
+
   const parts = input
     .trim()
     .split(/[\s,;]+/)
