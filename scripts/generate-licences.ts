@@ -77,10 +77,15 @@ function translateRing(ring: LonLat[], dLon: number, dLat: number): LonLat[] {
   return ring.map(([lon, lat]) => [lon + dLon, lat + dLat]);
 }
 
-// A small real-world gap between adjacent parcels (~90m). Visually indistinguishable at any
-// map zoom level a user would view licences at, but keeps parcels *robustly* non-overlapping —
-// relying on exact shared edges is numerically fragile (see GAP_DEG usage note below).
-const GAP_DEG = 0.0008;
+// Zero gap: adjacent parcels tile edge-to-edge with a literal shared boundary, no space between
+// them. A ~90m gap used to sit here specifically to dodge turf.booleanOverlap's false positives
+// on exactly-touching edges (floating-point edge coincidence) — see the old comment, preserved
+// in git history. checkNoOverlaps() below no longer uses booleanOverlap at all; it measures real
+// intersection *area* with an epsilon, which correctly treats a shared edge (zero area) as valid
+// adjacency rather than an overlap, and shelfPack()'s placement is purely additive (each rect
+// starts exactly where the previous one's width ends), so it can never overlap regardless of this
+// value. Nothing downstream still needs the gap for correctness.
+const GAP_DEG = 0;
 
 /** Shelf (skyline) bin-packing: places same-corner-anchored squares left-to-right, wrapping rows. Guarantees adjacency + non-overlap. */
 function shelfPack(items: { id: string; sideDegLon: number; sideDegLat: number }[]): Map<string, LonLat[]> {
