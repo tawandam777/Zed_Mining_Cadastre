@@ -87,3 +87,14 @@ export const toolOverlayStyle = new Style({
   fill: new Fill({ color: "rgba(29, 78, 137, 0.12)" }),
   image: new Circle({ radius: 4, fill: new Fill({ color: "#0F2A43" }) }),
 });
+
+// Distinct hollow ring (brand-accent blue, same hue as the active-tool highlight in ToolRail)
+// so a snapped vertex/edge reads as its own kind of feedback — not a placed vertex (small solid
+// navy dot, toolOverlayStyle above) and not the coordinate-search marker (solid amber dot).
+export const snapIndicatorStyle = new Style({
+  image: new Circle({
+    radius: 7,
+    stroke: new Stroke({ color: "#1D4E89", width: 2 }),
+    fill: new Fill({ color: "rgba(29, 78, 137, 0.15)" }),
+  }),
+});

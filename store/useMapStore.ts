@@ -16,6 +16,16 @@ export type SpatialTool =
 
 export type LonLat = [number, number];
 
+/** Tools that place vertices by clicking on the map — snapping and the undo/cancel shortcuts only apply to these. */
+export const SKETCH_TOOLS: SpatialTool[] = [
+  "measureDistance",
+  "measureArea",
+  "selectRect",
+  "selectCircle",
+  "selectPolygon",
+  "buffer",
+];
+
 interface MapStoreState {
   // shell
   theme: "light" | "dark";
@@ -56,6 +66,7 @@ interface MapStoreState {
   toolFrozen: boolean;
   bufferCenter: LonLat | null;
   bufferRadiusKm: number;
+  snappingEnabled: boolean;
 
   // display
   coordFormat: CoordinateFormat;
@@ -99,6 +110,9 @@ interface MapStoreState {
   setBufferCenter: (pt: LonLat | null) => void;
   setBufferRadiusKm: (v: number) => void;
   clearTool: () => void;
+  cancelSketch: () => void;
+  undoToolPoint: () => void;
+  toggleSnapping: () => void;
 
   setCoordFormat: (f: CoordinateFormat) => void;
   setMousePosition: (pos: LonLat | null) => void;
@@ -153,6 +167,7 @@ export const useMapStore = create<MapStoreState>()(
       toolFrozen: false,
       bufferCenter: null,
       bufferRadiusKm: 10,
+      snappingEnabled: true,
 
       coordFormat: DEFAULT_COORDINATE_FORMAT,
       mousePosition: null,
@@ -208,6 +223,24 @@ export const useMapStore = create<MapStoreState>()(
       setBufferRadiusKm: (v) => set({ bufferRadiusKm: v }),
       clearTool: () =>
         set({ activeTool: null, toolPoints: [], toolSelectionIds: [], bufferCenter: null, toolFrozen: false }),
+      // Cancels the in-progress sketch (QGIS's Escape behavior) without deactivating the tool
+      // itself, unlike clearTool() — lets the user immediately start a new sketch with the same
+      // tool still selected.
+      cancelSketch: () =>
+        set((s) => (s.activeTool ? { toolPoints: [], toolFrozen: false, bufferCenter: null, toolSelectionIds: [] } : {})),
+      // Removes the most recently placed vertex (QGIS's Backspace-while-digitizing behavior).
+      // Un-freezes a just-completed sketch so removing its last point re-enables editing instead
+      // of leaving a frozen, now-inconsistent result on screen.
+      undoToolPoint: () =>
+        set((s) => {
+          if (!s.activeTool) return {};
+          if (s.activeTool === "buffer") {
+            return s.bufferCenter ? { bufferCenter: null, toolSelectionIds: [] } : {};
+          }
+          if (s.toolPoints.length === 0) return {};
+          return { toolPoints: s.toolPoints.slice(0, -1), toolFrozen: false, toolSelectionIds: [] };
+        }),
+      toggleSnapping: () => set((s) => ({ snappingEnabled: !s.snappingEnabled })),
 
       setCoordFormat: (f) => set({ coordFormat: f }),
       setMousePosition: (pos) => set({ mousePosition: pos }),

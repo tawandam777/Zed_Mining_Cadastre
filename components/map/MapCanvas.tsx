@@ -7,6 +7,7 @@ import View from "ol/View";
 import ScaleLine from "ol/control/ScaleLine";
 import OverviewMap from "ol/control/OverviewMap";
 import Rotate from "ol/control/Rotate";
+import Snap from "ol/interaction/Snap";
 import { fromLonLat, toLonLat } from "ol/proj";
 import { defaults as defaultInteractions } from "ol/interaction/defaults";
 import { createBasemapLayer } from "./basemapLayer";
@@ -16,7 +17,7 @@ import { createMarkerLayer } from "./markerLayer";
 import { createToolLayer } from "./toolLayer";
 import { licenceStyleFunction, nationalBoundaryStyle, provinceBoundaryStyle, districtBoundaryStyle } from "./styles";
 import { useMapApi } from "./MapContext";
-import { useMapStore } from "@/store/useMapStore";
+import { useMapStore, SKETCH_TOOLS } from "@/store/useMapStore";
 import { useSpatialTools } from "@/components/tools/useSpatialTools";
 import { computeLiveMeasurementText } from "@/components/tools/liveMeasurement";
 import { HOME_EXTENT_LONLAT } from "@/config/app.config";
@@ -37,6 +38,7 @@ interface MeasureHud {
   y: number;
   text: string;
 }
+
 
 export default function MapCanvas() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -70,11 +72,18 @@ export default function MapCanvas() {
   const toolFrozen = useMapStore((s) => s.toolFrozen);
   const bufferCenter = useMapStore((s) => s.bufferCenter);
   const bufferRadiusKm = useMapStore((s) => s.bufferRadiusKm);
+  const snappingEnabled = useMapStore((s) => s.snappingEnabled);
 
   const licenceLayerApi = useRef(createLicenceLayer());
   const boundaryLayersApi = useRef(createBoundaryLayers());
   const markerLayerApi = useRef(createMarkerLayer());
   const toolLayerApi = useRef(createToolLayer());
+  const snapInteractionRef = useRef<Snap | null>(null);
+  // Written directly by the Snap interaction's snap/unsnap events and read inside
+  // processPointerMove (same rAF-throttled cadence as everything else on that hot path) —
+  // a ref, not React state, so a snap/unsnap doesn't trigger its own extra render independent
+  // of the pointermove render that's already about to happen.
+  const snapPointRef = useRef<[number, number] | null>(null);
 
   // ---- create the map once ----
   useEffect(() => {
@@ -114,6 +123,24 @@ export default function MapCanvas() {
     map.addControl(scaleLineControl);
     map.addControl(overviewMapControl);
     map.addControl(rotateControl);
+
+    // Snaps sketch-tool clicks/drags to licence-plot vertices and edges — starts inactive
+    // (toggled on/off below based on activeTool/toolFrozen/snappingEnabled) so it never affects
+    // ordinary map browsing or feature selection. Targets the licence source directly, so it
+    // tracks that source's own async-loaded data automatically (no ordering dependency on
+    // useLicences() having resolved yet). Snap mutates the MapBrowserEvent's coordinate in place
+    // before our own singleclick/pointermove listeners run, so the existing click-to-place-vertex
+    // and live rubber-band preview logic gets snapping for free with no changes of its own.
+    const snapInteraction = new Snap({ source: licenceLayerApi.current.source, pixelTolerance: 15 });
+    snapInteraction.setActive(false);
+    snapInteraction.on("snap", (evt) => {
+      snapPointRef.current = toLonLat(evt.vertex) as [number, number];
+    });
+    snapInteraction.on("unsnap", () => {
+      snapPointRef.current = null;
+    });
+    map.addInteraction(snapInteraction);
+    snapInteractionRef.current = snapInteraction;
 
     mapRef.current = map;
 
@@ -157,6 +184,7 @@ export default function MapCanvas() {
           bufferCenter: useMapStore.getState().bufferCenter,
           bufferRadiusKm: useMapStore.getState().bufferRadiusKm,
           previewPoint: lonLat,
+          snapPoint: snapPointRef.current,
         });
 
         const liveText = computeLiveMeasurementText(currentTool, currentPoints, lonLat);
@@ -233,9 +261,29 @@ export default function MapCanvas() {
     };
     container.addEventListener("mouseleave", handleContainerMouseLeave);
 
+    // QGIS-style digitizing shortcuts: Escape cancels the in-progress sketch (tool stays
+    // active, ready for a new one), Backspace/Delete undoes the last placed vertex. Global
+    // (not map-target-scoped) so they work regardless of DOM focus, but skipped while a form
+    // field has focus so typing in the search bar or a filter input isn't hijacked.
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const isFormField = !!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (isFormField) return;
+      const { activeTool: currentTool } = useMapStore.getState();
+      if (!currentTool) return;
+      if (e.key === "Escape") {
+        useMapStore.getState().cancelSketch();
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault();
+        useMapStore.getState().undoToolPoint();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       if (rafHandle !== null) cancelAnimationFrame(rafHandle);
       container.removeEventListener("mouseleave", handleContainerMouseLeave);
+      window.removeEventListener("keydown", handleKeyDown);
       // Controls with a custom `target` render into our own ref divs, not the
       // map's internal viewport — setTarget(undefined) alone won't remove them,
       // so remove each explicitly (triggers their setMap(null) DOM cleanup)
@@ -244,6 +292,8 @@ export default function MapCanvas() {
       map.removeControl(scaleLineControl);
       map.removeControl(overviewMapControl);
       map.removeControl(rotateControl);
+      map.removeInteraction(snapInteraction);
+      snapInteractionRef.current = null;
       map.setTarget(undefined);
       mapRef.current = null;
     };
@@ -355,8 +405,20 @@ export default function MapCanvas() {
       bufferCenter,
       bufferRadiusKm,
       previewPoint: null,
+      snapPoint: null,
     });
   }, [activeTool, toolPoints, toolFrozen, bufferCenter, bufferRadiusKm]);
+
+  // ---- snapping: only active while a sketch tool is mid-sketch and the user hasn't turned it off ----
+  useEffect(() => {
+    const snap = snapInteractionRef.current;
+    if (!snap) return;
+    const shouldBeActive = snappingEnabled && !!activeTool && SKETCH_TOOLS.includes(activeTool) && !toolFrozen;
+    snap.setActive(shouldBeActive);
+    // A deactivated interaction's handleEvent no longer runs, so no further "unsnap" event will
+    // ever clear a stale ring left over from just before deactivation — clear it here instead.
+    if (!shouldBeActive) snapPointRef.current = null;
+  }, [activeTool, toolFrozen, snappingEnabled]);
 
   return (
     <div ref={containerRef} className="relative h-full w-full bg-slate-100">

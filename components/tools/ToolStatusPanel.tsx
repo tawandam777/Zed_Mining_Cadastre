@@ -1,9 +1,10 @@
 "use client";
 
-import { useMapStore } from "@/store/useMapStore";
+import { useMapStore, SKETCH_TOOLS } from "@/store/useMapStore";
 import { Slider } from "@/components/ui/slider";
 import { lineLengthKm, polygonAreaKm2 } from "@/lib/geo";
-import { X } from "lucide-react";
+import { X, Magnet } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const INSTRUCTIONS: Record<string, (n: number, frozen: boolean) => string> = {
   measureDistance: (n) => (n < 2 ? "Click points on the map to measure a distance. Double-click to finish." : "Double-click to finish."),
@@ -38,9 +39,12 @@ export function ToolStatusPanel() {
   const setBufferRadiusKm = useMapStore((s) => s.setBufferRadiusKm);
   const bufferCenter = useMapStore((s) => s.bufferCenter);
   const clearTool = useMapStore((s) => s.clearTool);
+  const snappingEnabled = useMapStore((s) => s.snappingEnabled);
+  const toggleSnapping = useMapStore((s) => s.toggleSnapping);
 
   if (!activeTool) return null;
 
+  const isSketchTool = SKETCH_TOOLS.includes(activeTool);
   const measureText =
     activeTool === "measureDistance" && toolPoints.length >= 2
       ? `${lineLengthKm(toolPoints).toFixed(2)} km`
@@ -52,9 +56,26 @@ export function ToolStatusPanel() {
     <div className="border-border bg-popover animate-in fade-in zoom-in-95 absolute top-3 left-16 z-10 w-64 rounded-md border p-3 shadow-md duration-150">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[11px] font-semibold tracking-wide uppercase">{TOOL_LABELS[activeTool]}</span>
-        <button type="button" onClick={clearTool} aria-label="Clear tool" className="hover:bg-accent rounded p-0.5">
-          <X className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-0.5">
+          {isSketchTool && (
+            <button
+              type="button"
+              onClick={toggleSnapping}
+              aria-label={snappingEnabled ? "Disable snapping to plot edges/corners" : "Enable snapping to plot edges/corners"}
+              aria-pressed={snappingEnabled}
+              title="Snap to plot edges & corners"
+              className={cn(
+                "rounded p-0.5",
+                snappingEnabled ? "text-brand-accent" : "text-muted-foreground hover:bg-accent",
+              )}
+            >
+              <Magnet className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <button type="button" onClick={clearTool} aria-label="Clear tool" className="hover:bg-accent rounded p-0.5">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       {activeTool === "buffer" && (
@@ -76,6 +97,13 @@ export function ToolStatusPanel() {
         {INSTRUCTIONS[activeTool]?.(toolPoints.length, toolFrozen)}
         {measureText && <div className="mt-1 font-mono font-semibold">{measureText}</div>}
       </div>
+
+      {isSketchTool && (
+        <div className="text-muted-foreground mt-2 text-[10.5px]">
+          <kbd className="border-border rounded border px-1 py-0.5 font-mono">Esc</kbd> cancel sketch ·{" "}
+          <kbd className="border-border rounded border px-1 py-0.5 font-mono">⌫</kbd> undo last point
+        </div>
+      )}
     </div>
   );
 }

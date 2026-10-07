@@ -1,10 +1,11 @@
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import Feature from "ol/Feature";
+import type { FeatureLike } from "ol/Feature";
 import { LineString, Point, Polygon } from "ol/geom";
 import { fromLonLat } from "ol/proj";
 import * as turf from "@turf/turf";
-import { toolOverlayStyle } from "./styles";
+import { toolOverlayStyle, snapIndicatorStyle } from "./styles";
 import type { SpatialTool } from "@/store/useMapStore";
 
 type LonLat = [number, number];
@@ -13,21 +14,27 @@ function toMap(points: LonLat[]) {
   return points.map((p) => fromLonLat(p));
 }
 
+function overlayStyleFn(feature: FeatureLike) {
+  return feature.get("kind") === "snap" ? snapIndicatorStyle : toolOverlayStyle;
+}
+
 export interface ToolOverlayState {
   tool: SpatialTool | null;
   points: LonLat[];
   bufferCenter: LonLat | null;
   bufferRadiusKm: number;
   previewPoint: LonLat | null;
+  /** Map-coordinate vertex/edge point the cursor is currently snapped to, if any — see MapCanvas's `ol/interaction/Snap`. */
+  snapPoint: LonLat | null;
 }
 
 export function createToolLayer() {
   const source = new VectorSource();
-  const layer = new VectorLayer({ source, style: toolOverlayStyle, properties: { id: "tool-overlay" } });
+  const layer = new VectorLayer({ source, style: overlayStyleFn, properties: { id: "tool-overlay" } });
 
   function update(state: ToolOverlayState) {
     source.clear();
-    const { tool, points, bufferCenter, bufferRadiusKm, previewPoint } = state;
+    const { tool, points, bufferCenter, bufferRadiusKm, previewPoint, snapPoint } = state;
     if (!tool) return;
 
     const livePoints = previewPoint && !["buffer"].includes(tool) ? [...points, previewPoint] : points;
@@ -70,6 +77,12 @@ export function createToolLayer() {
 
     if ((tool === "measureDistance" || tool === "measureArea" || tool === "selectPolygon") && points.length > 0) {
       points.forEach((p) => source.addFeature(new Feature({ geometry: new Point(fromLonLat(p)) })));
+    }
+
+    if (snapPoint) {
+      const feature = new Feature({ geometry: new Point(fromLonLat(snapPoint)) });
+      feature.set("kind", "snap");
+      source.addFeature(feature);
     }
   }
 
