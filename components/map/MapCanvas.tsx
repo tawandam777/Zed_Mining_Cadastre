@@ -131,7 +131,18 @@ export default function MapCanvas() {
     // useLicences() having resolved yet). Snap mutates the MapBrowserEvent's coordinate in place
     // before our own singleclick/pointermove listeners run, so the existing click-to-place-vertex
     // and live rubber-band preview logic gets snapping for free with no changes of its own.
-    const snapInteraction = new Snap({ source: licenceLayerApi.current.source, pixelTolerance: 15 });
+    //
+    // pixelTolerance is deliberately tight (OL's own default, not the 15px tried first): adjacent
+    // licence parcels are packed only ~90m apart by design (scripts/generate-licences.ts's
+    // GAP_DEG), and at anything but a fairly close zoom, 90m is well within even a modest pixel
+    // radius — e.g. 15px was ~368m on the ground at zoom 12.6, more than 4x the gap, so a
+    // neighbouring plot's corner was routinely closer to the cursor than the intended plot's own
+    // corner and got snapped instead (confirmed directly: EPL-2022-0520's nearest neighbouring
+    // vertices sit 86.7m from its own corners — well inside that radius). 10px shrinks that
+    // ambiguity window but can't eliminate it at very low zoom with this densely-packed data —
+    // same inherent limitation any pixel-based snap tolerance has in QGIS or any other GIS tool;
+    // zooming in further before tracing a specific plot's corners avoids it.
+    const snapInteraction = new Snap({ source: licenceLayerApi.current.source, pixelTolerance: 10 });
     snapInteraction.setActive(false);
     snapInteraction.on("snap", (evt) => {
       snapPointRef.current = toLonLat(evt.vertex) as [number, number];
