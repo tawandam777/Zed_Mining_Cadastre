@@ -66,7 +66,8 @@ interface MapStoreState {
   toolFrozen: boolean;
   bufferCenter: LonLat | null;
   bufferRadiusKm: number;
-  snappingEnabled: boolean;
+  snapToVertices: boolean;
+  snapToEdges: boolean;
 
   // display
   coordFormat: CoordinateFormat;
@@ -112,7 +113,8 @@ interface MapStoreState {
   clearTool: () => void;
   cancelSketch: () => void;
   undoToolPoint: () => void;
-  toggleSnapping: () => void;
+  toggleSnapToVertices: () => void;
+  toggleSnapToEdges: () => void;
 
   setCoordFormat: (f: CoordinateFormat) => void;
   setMousePosition: (pos: LonLat | null) => void;
@@ -167,7 +169,8 @@ export const useMapStore = create<MapStoreState>()(
       toolFrozen: false,
       bufferCenter: null,
       bufferRadiusKm: 10,
-      snappingEnabled: true,
+      snapToVertices: true,
+      snapToEdges: true,
 
       coordFormat: DEFAULT_COORDINATE_FORMAT,
       mousePosition: null,
@@ -240,7 +243,8 @@ export const useMapStore = create<MapStoreState>()(
           if (s.toolPoints.length === 0) return {};
           return { toolPoints: s.toolPoints.slice(0, -1), toolFrozen: false, toolSelectionIds: [] };
         }),
-      toggleSnapping: () => set((s) => ({ snappingEnabled: !s.snappingEnabled })),
+      toggleSnapToVertices: () => set((s) => ({ snapToVertices: !s.snapToVertices })),
+      toggleSnapToEdges: () => set((s) => ({ snapToEdges: !s.snapToEdges })),
 
       setCoordFormat: (f) => set({ coordFormat: f }),
       setMousePosition: (pos) => set({ mousePosition: pos }),

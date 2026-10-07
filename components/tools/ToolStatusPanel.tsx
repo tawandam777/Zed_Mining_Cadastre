@@ -3,7 +3,7 @@
 import { useMapStore, SKETCH_TOOLS } from "@/store/useMapStore";
 import { Slider } from "@/components/ui/slider";
 import { lineLengthKm, polygonAreaKm2 } from "@/lib/geo";
-import { X, Magnet } from "lucide-react";
+import { X, CircleDot, Spline } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const INSTRUCTIONS: Record<string, (n: number, frozen: boolean) => string> = {
@@ -39,8 +39,10 @@ export function ToolStatusPanel() {
   const setBufferRadiusKm = useMapStore((s) => s.setBufferRadiusKm);
   const bufferCenter = useMapStore((s) => s.bufferCenter);
   const clearTool = useMapStore((s) => s.clearTool);
-  const snappingEnabled = useMapStore((s) => s.snappingEnabled);
-  const toggleSnapping = useMapStore((s) => s.toggleSnapping);
+  const snapToVertices = useMapStore((s) => s.snapToVertices);
+  const toggleSnapToVertices = useMapStore((s) => s.toggleSnapToVertices);
+  const snapToEdges = useMapStore((s) => s.snapToEdges);
+  const toggleSnapToEdges = useMapStore((s) => s.toggleSnapToEdges);
 
   if (!activeTool) return null;
 
@@ -58,19 +60,34 @@ export function ToolStatusPanel() {
         <span className="text-[11px] font-semibold tracking-wide uppercase">{TOOL_LABELS[activeTool]}</span>
         <div className="flex items-center gap-0.5">
           {isSketchTool && (
-            <button
-              type="button"
-              onClick={toggleSnapping}
-              aria-label={snappingEnabled ? "Disable snapping to plot edges/corners" : "Enable snapping to plot edges/corners"}
-              aria-pressed={snappingEnabled}
-              title="Snap to plot edges & corners"
-              className={cn(
-                "rounded p-0.5",
-                snappingEnabled ? "text-brand-accent" : "text-muted-foreground hover:bg-accent",
-              )}
-            >
-              <Magnet className="h-3.5 w-3.5" />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={toggleSnapToVertices}
+                aria-label={snapToVertices ? "Disable snapping to plot corners" : "Enable snapping to plot corners"}
+                aria-pressed={snapToVertices}
+                title="Snap to plot corners"
+                className={cn(
+                  "rounded p-0.5",
+                  snapToVertices ? "text-brand-accent" : "text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <CircleDot className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={toggleSnapToEdges}
+                aria-label={snapToEdges ? "Disable snapping to plot edges" : "Enable snapping to plot edges"}
+                aria-pressed={snapToEdges}
+                title="Snap to plot edges"
+                className={cn(
+                  "rounded p-0.5",
+                  snapToEdges ? "text-brand-accent" : "text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <Spline className="h-3.5 w-3.5" />
+              </button>
+            </>
           )}
           <button type="button" onClick={clearTool} aria-label="Clear tool" className="hover:bg-accent rounded p-0.5">
             <X className="h-3.5 w-3.5" />

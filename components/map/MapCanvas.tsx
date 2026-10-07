@@ -7,7 +7,7 @@ import View from "ol/View";
 import ScaleLine from "ol/control/ScaleLine";
 import OverviewMap from "ol/control/OverviewMap";
 import Rotate from "ol/control/Rotate";
-import Snap from "ol/interaction/Snap";
+import type Snap from "ol/interaction/Snap";
 import { fromLonLat, toLonLat } from "ol/proj";
 import { defaults as defaultInteractions } from "ol/interaction/defaults";
 import { createBasemapLayer } from "./basemapLayer";
@@ -15,6 +15,7 @@ import { createLicenceLayer } from "./licenceLayer";
 import { createBoundaryLayers } from "./boundaryLayer";
 import { createMarkerLayer } from "./markerLayer";
 import { createToolLayer } from "./toolLayer";
+import { createSnapInteraction } from "./snapInteraction";
 import { licenceStyleFunction, nationalBoundaryStyle, provinceBoundaryStyle, districtBoundaryStyle } from "./styles";
 import { useMapApi } from "./MapContext";
 import { useMapStore, SKETCH_TOOLS } from "@/store/useMapStore";
@@ -72,13 +73,20 @@ export default function MapCanvas() {
   const toolFrozen = useMapStore((s) => s.toolFrozen);
   const bufferCenter = useMapStore((s) => s.bufferCenter);
   const bufferRadiusKm = useMapStore((s) => s.bufferRadiusKm);
-  const snappingEnabled = useMapStore((s) => s.snappingEnabled);
+  const snapToVertices = useMapStore((s) => s.snapToVertices);
+  const snapToEdges = useMapStore((s) => s.snapToEdges);
 
   const licenceLayerApi = useRef(createLicenceLayer());
   const boundaryLayersApi = useRef(createBoundaryLayers());
   const markerLayerApi = useRef(createMarkerLayer());
   const toolLayerApi = useRef(createToolLayer());
   const snapInteractionRef = useRef<Snap | null>(null);
+  // OL's Snap has no public setter for its vertex/edge flags (constructor-only, see
+  // node_modules/ol/interaction/Snap.js) — the only way to change which kinds of snapping are
+  // enabled at runtime is to swap in a new instance. This ref remembers which (vertex, edge)
+  // combination the current instance was built with, so the effect below only pays that cost
+  // when the user actually toggles one of the two, not on every activeTool/toolFrozen change.
+  const snapFlagsRef = useRef<{ vertex: boolean; edge: boolean } | null>(null);
   // Written directly by the Snap interaction's snap/unsnap events and read inside
   // processPointerMove (same rAF-throttled cadence as everything else on that hot path) —
   // a ref, not React state, so a snap/unsnap doesn't trigger its own extra render independent
@@ -124,34 +132,10 @@ export default function MapCanvas() {
     map.addControl(overviewMapControl);
     map.addControl(rotateControl);
 
-    // Snaps sketch-tool clicks/drags to licence-plot vertices and edges — starts inactive
-    // (toggled on/off below based on activeTool/toolFrozen/snappingEnabled) so it never affects
-    // ordinary map browsing or feature selection. Targets the licence source directly, so it
-    // tracks that source's own async-loaded data automatically (no ordering dependency on
-    // useLicences() having resolved yet). Snap mutates the MapBrowserEvent's coordinate in place
-    // before our own singleclick/pointermove listeners run, so the existing click-to-place-vertex
-    // and live rubber-band preview logic gets snapping for free with no changes of its own.
-    //
-    // pixelTolerance is deliberately tight (OL's own default, not the 15px tried first): adjacent
-    // licence parcels are packed only ~90m apart by design (scripts/generate-licences.ts's
-    // GAP_DEG), and at anything but a fairly close zoom, 90m is well within even a modest pixel
-    // radius — e.g. 15px was ~368m on the ground at zoom 12.6, more than 4x the gap, so a
-    // neighbouring plot's corner was routinely closer to the cursor than the intended plot's own
-    // corner and got snapped instead (confirmed directly: EPL-2022-0520's nearest neighbouring
-    // vertices sit 86.7m from its own corners — well inside that radius). 10px shrinks that
-    // ambiguity window but can't eliminate it at very low zoom with this densely-packed data —
-    // same inherent limitation any pixel-based snap tolerance has in QGIS or any other GIS tool;
-    // zooming in further before tracing a specific plot's corners avoids it.
-    const snapInteraction = new Snap({ source: licenceLayerApi.current.source, pixelTolerance: 10 });
-    snapInteraction.setActive(false);
-    snapInteraction.on("snap", (evt) => {
-      snapPointRef.current = toLonLat(evt.vertex) as [number, number];
-    });
-    snapInteraction.on("unsnap", () => {
-      snapPointRef.current = null;
-    });
-    map.addInteraction(snapInteraction);
-    snapInteractionRef.current = snapInteraction;
+    // Snapping itself (vertex/edge flags, active state) is set up by a separate effect below,
+    // keyed on snapToVertices/snapToEdges/activeTool/toolFrozen — not here, since those need to
+    // swap the interaction at runtime (OL's Snap has no setter for its vertex/edge flags) rather
+    // than only ever being configured once at mount.
 
     mapRef.current = map;
 
@@ -303,8 +287,9 @@ export default function MapCanvas() {
       map.removeControl(scaleLineControl);
       map.removeControl(overviewMapControl);
       map.removeControl(rotateControl);
-      map.removeInteraction(snapInteraction);
+      if (snapInteractionRef.current) map.removeInteraction(snapInteractionRef.current);
       snapInteractionRef.current = null;
+      snapFlagsRef.current = null;
       map.setTarget(undefined);
       mapRef.current = null;
     };
@@ -420,16 +405,29 @@ export default function MapCanvas() {
     });
   }, [activeTool, toolPoints, toolFrozen, bufferCenter, bufferRadiusKm]);
 
-  // ---- snapping: only active while a sketch tool is mid-sketch and the user hasn't turned it off ----
+  // ---- snapping: (re)built when the vertex/edge flags change, active only while a sketch tool is mid-sketch ----
   useEffect(() => {
-    const snap = snapInteractionRef.current;
-    if (!snap) return;
-    const shouldBeActive = snappingEnabled && !!activeTool && SKETCH_TOOLS.includes(activeTool) && !toolFrozen;
-    snap.setActive(shouldBeActive);
+    const map = mapRef.current;
+    if (!map) return;
+
+    const flags = snapFlagsRef.current;
+    if (!flags || flags.vertex !== snapToVertices || flags.edge !== snapToEdges) {
+      if (snapInteractionRef.current) map.removeInteraction(snapInteractionRef.current);
+      const snap = createSnapInteraction(licenceLayerApi.current.source, { vertex: snapToVertices, edge: snapToEdges }, (pt) => {
+        snapPointRef.current = pt;
+      });
+      map.addInteraction(snap);
+      snapInteractionRef.current = snap;
+      snapFlagsRef.current = { vertex: snapToVertices, edge: snapToEdges };
+    }
+
+    const shouldBeActive =
+      (snapToVertices || snapToEdges) && !!activeTool && SKETCH_TOOLS.includes(activeTool) && !toolFrozen;
+    snapInteractionRef.current?.setActive(shouldBeActive);
     // A deactivated interaction's handleEvent no longer runs, so no further "unsnap" event will
     // ever clear a stale ring left over from just before deactivation — clear it here instead.
     if (!shouldBeActive) snapPointRef.current = null;
-  }, [activeTool, toolFrozen, snappingEnabled]);
+  }, [activeTool, toolFrozen, snapToVertices, snapToEdges, mapRef]);
 
   return (
     <div ref={containerRef} className="relative h-full w-full bg-slate-100">
